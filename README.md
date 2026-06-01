@@ -6,7 +6,7 @@ Ce logiciel est une application de stratégie et de gestion de réseau basée su
 ---
 
 ## 🎮 Le Concept
-Le monde est divisé en quatre zones d'influence (Rouge, Bleu, Vert, Marron). À la tête de votre camp, vous devez déployer vos **Soldats** et construire un réseau militaire reliant des points stratégiques essentiels pour étendre votre influence.
+Le monde est divisé en quatre zones d'influence (Bloc OUEST, Bloc EST, Bloc chinois, Bloc non-aligné). À la tête de votre camp, vous devez déployer vos **Soldats** et construire un réseau militaire reliant des points stratégiques essentiels pour étendre votre influence.
 
 > **Le défi :** Anticipez vos déplacements, sécurisez les zones clés et bloquez les régiments adverses avant qu'ils ne verrouillent le territoire !
 
