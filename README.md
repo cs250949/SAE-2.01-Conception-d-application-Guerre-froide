@@ -41,8 +41,7 @@ Chaque point sur la carte représente une infrastructure vitale :
 ---
 
 ```bash
-# Exemple pour un projet Java/Python
 git clone git@github.com:cs250949/SAE-2.01-Conception-d-application-Guerre-froide.git
-cd SAE
+cd SAE-2.01-Conception-d-application-Guerre-froide
 # Lancer le jeu
 ./run_game.sh
