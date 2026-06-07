@@ -5,6 +5,9 @@ public class Arete
 	private int src;
 	private int cible;
 
+	/*-------------------------------*/
+	/* Constructeur                  */
+	/*-------------------------------*/
 	public Arete(int src, int cible)
 	{
 		this.src = src;
@@ -21,6 +24,10 @@ public class Arete
 		return this.cible;
 	}
 
+	/*-------------------------------*/
+	/* Vérifie si un sommet est dans */
+	/* l'arête                       */
+	/*-------------------------------*/
 	public boolean contient(int id)
 	{
 		return (this.src == id || this.cible == id);
@@ -33,6 +40,11 @@ public class Arete
 		return -1;
 	}
 
+
+	/*-------------------------------*/
+	/* Bidirectionnel pour éviter    */
+	/* les doublons                  */
+	/*-------------------------------*/
 	public boolean equals(Object obj)
 	{
 		if (this == obj) return true;

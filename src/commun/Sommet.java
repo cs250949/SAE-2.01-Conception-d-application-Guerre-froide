@@ -7,6 +7,10 @@ public class Sommet
 	private int y;
 	private String typeZone;
 
+	/*-------------------------------*/
+	/* Constructeur                  */
+	/*-------------------------------*/
+
 	public Sommet(int id, int x, int y, String typeZone)
 	{
 		this.id = id;
@@ -55,6 +59,9 @@ public class Sommet
 		this.typeZone = typeZone;
 	}
 
+	/*-------------------------------------------*/
+	/* Vérifie si un point est proche du sommet */
+	/*-------------------------------------------*/
 	public boolean contientPoint(int px, int py)
 	{
 		int dx = px - this.x;
@@ -62,6 +69,9 @@ public class Sommet
 		return (dx * dx + dy * dy) <= 400;
 	}
 
+	/*---------------------------------*/
+	/* Première lettre du type de zone */
+	/*---------------------------------*/
 	public String getPremiereLettre()
 	{
 		if (this.typeZone == null) return "?";
@@ -72,6 +82,10 @@ public class Sommet
 		if (this.typeZone.equals("TANK"))      return "T";
 		return this.typeZone.substring(0, 1);
 	}
+
+	/*-------------------------------*/
+	/* Couleur selon le type de zone */
+	/*-------------------------------*/
 
 	public static java.awt.Color getCouleurParType(String type)
 	{

@@ -27,6 +27,9 @@ public class ControleurConception
 	private int            prochainId;
 	private String         zoneCourante;
 
+	/*-------------------------------*/
+	/* Constructeur                  */
+	/*-------------------------------*/
 	public ControleurConception()
 	{
 		this.plateau      = new Graphe();
@@ -35,8 +38,14 @@ public class ControleurConception
 		this.construireInterface();
 	}
 
+	/*-------------------------------*/
+	/* Construction de l'interface   */
+	/*-------------------------------*/
 	private void construireInterface()
 	{
+		/*-------------------------------*/
+		/* Création des composants       */
+		/*-------------------------------*/ 
 		this.frame = new JFrame("Opération Réseau Rouge - Configuration");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.frame.setLayout(new BorderLayout());
@@ -45,14 +54,20 @@ public class ControleurConception
 		panneauPrincipal.setBackground(new Color(30, 30, 40));
 		panneauPrincipal.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-		JPanel panneauFormulaire = this.creerFormulaire();
+		JPanel panneauFormulaire   = this.creerFormulaire();
 		JPanel panneauEditionPanel = this.creerPanneauEdition();
-		JPanel panneauBoutons = this.creerBarreBoutons();
+		JPanel panneauBoutons      = this.creerBarreBoutons();
 
+		/*-------------------------------*/
+		/* Positionnement des composants */
+		/*-------------------------------*/
 		panneauPrincipal.add(panneauFormulaire, BorderLayout.NORTH);
 		panneauPrincipal.add(panneauEditionPanel, BorderLayout.CENTER);
 		panneauPrincipal.add(panneauBoutons, BorderLayout.SOUTH);
 
+		/*-------------------------------*/
+		/* Activation des composants     */
+		/*-------------------------------*/
 		this.frame.add(panneauPrincipal);
 		this.frame.setSize(1100, 750);
 		this.frame.setLocationRelativeTo(null);
@@ -61,6 +76,10 @@ public class ControleurConception
 
 	private JPanel creerFormulaire()
 	{
+		/*-------------------------------*/
+		/* Création des composants       */
+		/*-------------------------------*/
+
 		JPanel panneau = new JPanel(new GridLayout(4, 2, 10, 10));
 		panneau.setBackground(new Color(30, 30, 40));
 		panneau.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -80,6 +99,9 @@ public class ControleurConception
 		this.labelErreur = new JLabel(" ");
 		this.labelErreur.setForeground(new Color(255, 100, 100));
 
+		/*-------------------------------*/
+		/* Positionnement des composants */
+		/*-------------------------------*/
 		panneau.add(labelLargeur);
 		panneau.add(this.champLargeur);
 		panneau.add(labelHauteur);
@@ -93,6 +115,10 @@ public class ControleurConception
 
 	private JPanel creerPanneauEdition()
 	{
+		/*-------------------------------*/
+		/* Création des composants       */
+		/*-------------------------------*/
+
 		JPanel panneau = new JPanel(new BorderLayout());
 		panneau.setBackground(new Color(40, 40, 50));
 		panneau.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -128,6 +154,9 @@ public class ControleurConception
 		btnSauvegarder.setForeground(Color.WHITE);
 		btnSauvegarder.addActionListener(e -> this.sauvegarderPlateau());
 
+		/*-------------------------------*/
+		/* Positionnement des composants */
+		/*-------------------------------*/
 		panneauOutils.add(labelZone);
 		panneauOutils.add(comboZones);
 		panneauOutils.add(btnAjouter);
@@ -146,6 +175,9 @@ public class ControleurConception
 
 	private JPanel creerBarreBoutons()
 	{
+		/*-------------------------------*/
+		/* Création des composants       */
+		/*-------------------------------*/
 		JPanel panneau = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
 		panneau.setBackground(new Color(30, 30, 40));
 
@@ -169,6 +201,10 @@ public class ControleurConception
 		btnValider.setForeground(Color.WHITE);
 		btnValider.addActionListener(e -> this.validerEtLancer());
 
+		/*-------------------------------*/
+		/* Positionnement des composants */
+		/*-------------------------------*/
+
 		panneau.add(btnRegles);
 		panneau.add(btnAnnuler);
 		panneau.add(btnReset);
@@ -177,6 +213,9 @@ public class ControleurConception
 		return panneau;
 	}
 
+	/*-------------------------------*/
+	/* Actions des boutons            */
+	/*-------------------------------*/
 	private void activerModeAjout()
 	{
 		this.panneauEdition.setModeAjout(true);
@@ -246,6 +285,10 @@ public class ControleurConception
 		this.labelErreur.setText("Champs réinitialisés");
 	}
 
+	/*-------------------------------*/
+	/* Affiche les règles du jeu      */
+	/*-------------------------------*/
+
 	private void afficherRegles()
 	{
 		String texte =
@@ -278,16 +321,19 @@ public class ControleurConception
 		JOptionPane.showMessageDialog(this.frame, new JScrollPane(zone), "Règles", JOptionPane.INFORMATION_MESSAGE);
 	}
 
+	/*---------------------------------------*/
+	/* Valide les paramètres et lance le jeu */
+	/*---------------------------------------*/
 	private void validerEtLancer()
 	{
 		try
 		{
-			int largeur = Integer.parseInt(this.champLargeur.getText().trim());
-			int hauteur = Integer.parseInt(this.champHauteur.getText().trim());
+			int largeur   = Integer.parseInt(this.champLargeur.getText().trim());
+			int hauteur   = Integer.parseInt(this.champHauteur.getText().trim());
 			int nbJoueurs = (Integer) this.NbJoueurs.getValue();
 
-			this.plateau.setLargeurLogique(largeur);
-			this.plateau.setHauteurLogique(hauteur);
+			this.plateau.setLargeur(largeur);
+			this.plateau.setHauteur(hauteur);
 
 			java.util.List<String> noms = new java.util.ArrayList<>();
 			for (int i = 0; i < nbJoueurs; i++) noms.add(NOMS_JOUEURS[i]);
@@ -302,6 +348,7 @@ public class ControleurConception
 		}
 	}
 
+	
 	private class PanneauEdition extends JPanel
 	{
 		private Graphe  plateau;
@@ -313,6 +360,9 @@ public class ControleurConception
 		private int     dragX, dragY;
 		private Image   fondImage;
 
+		/*-------------------------------*/
+		/* Constructeur                  */
+		/*-------------------------------*/
 		public PanneauEdition()
 		{
 			this.setPreferredSize(new Dimension(800, 600));
@@ -461,6 +511,6 @@ public class ControleurConception
 
 	public static void main(String[] args)
 	{
-		SwingUtilities.invokeLater(ControleurConception::new);
+		ControleurConception fenetre = new ControleurConception();
 	}
 }

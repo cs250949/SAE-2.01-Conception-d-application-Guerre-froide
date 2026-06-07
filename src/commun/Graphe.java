@@ -7,17 +7,23 @@ public class Graphe
 {
 	private List<Sommet> sommets;
 	private List<Arete>  aretes;
-	private int          largeurLogique;
-	private int          hauteurLogique;
+	private int          largeur;
+	private int          hauteur;
 
+	/*-------------------------------*/
+	/* Constructeur                  */
+	/*-------------------------------*/
 	public Graphe()
 	{
 		this.sommets = new ArrayList<>();
 		this.aretes  = new ArrayList<>();
-		this.largeurLogique = 800;
-		this.hauteurLogique = 600;
+		this.largeur = 800;
+		this.hauteur = 600;
 	}
 
+	/*--------------------------------*/
+	/* Gestion des sommets et arêtes  */
+	/*--------------------------------*/
 	public void ajouterSommet(Sommet s)
 	{
 		if (!this.sommets.contains(s)) this.sommets.add(s);
@@ -88,6 +94,9 @@ public class Graphe
 		return degre;
 	}
 
+	/*-------------------------------*/
+	/* Chargement depuis un fichier   */
+	/*-------------------------------*/
 	public void chargerDepuisFichier(String cheminFichier) throws IOException
 	{
 		this.sommets.clear();
@@ -113,24 +122,24 @@ public class Graphe
 		br.close();
 	}
 
-	public int getLargeurLogique()
+	public int getLargeur()
 	{
-		return this.largeurLogique;
+		return this.largeur;
 	}
 
-	public void setLargeurLogique(int largeurLogique)
+	public void setLargeur(int largeur)
 	{
-		this.largeurLogique = largeurLogique;
+		this.largeur = largeur;
 	}
 
-	public int getHauteurLogique()
+	public int getHauteur()
 	{
-		return this.hauteurLogique;
+		return this.hauteur;
 	}
 
-	public void setHauteurLogique(int hauteurLogique)
+	public void setHauteur(int hauteur)
 	{
-		this.hauteurLogique = hauteurLogique;
+		this.hauteur = hauteur;
 	}
 
 	public int getNbSommets()
