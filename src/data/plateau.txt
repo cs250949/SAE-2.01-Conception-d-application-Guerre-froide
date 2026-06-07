@@ -1,0 +1,2 @@
+# Format: id;x;y;typeZone
+# Types: HOPITAL, FERME, PETROLIER, PORT, TANK
