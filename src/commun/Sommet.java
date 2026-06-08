@@ -97,6 +97,6 @@ public class Sommet
 		if (type.equals("PORT"     ))   return new java.awt.Color(60, 120, 220, 200);
 		if (type.equals("TANK"     ))   return new java.awt.Color(160, 100, 40, 200);
 		if (type.equals("JOKER"    ))   return new java.awt.Color(200, 200, 60, 200);
-		return new java.awt.Color(100, 100, 100, 200);
+		return new Color(100, 100, 100, 200);
 	}
 }
