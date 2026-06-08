@@ -17,8 +17,19 @@ Jeu de stratégie où des agents doivent connecter un réseau de logistique sans
 3. Valider pour lancer la partie
 4. Piocher des cartes et connecter les stations
 
+# Protocole
 
+## Récupération du dépôt
+```bash
+git clone git@github.com:cs250949/SAE-2.01-Conception-d-application-Guerre-froide.git
+cd SAE-2.01-Conception-d-application-Guerre-froide
+```
 
 ## Compilation
 ```bash
 javac commun/*.java conception/controleur/*.java jeu/controleur/*.java
+```
+## Lancement du jeu 
+```bash
+java conception.controleur.ControleurConception
+```
