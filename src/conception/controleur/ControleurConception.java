@@ -11,15 +11,17 @@ import javax.swing.border.EmptyBorder;
 
 public class ControleurConception
 {
-	private static final String CHEMIN_PLATEAU = "data/plateau.txt";
-	private static final String[] TYPES_ZONES  = {"HOPITAL", "FERME", "PETROLIER", "PORT", "TANK"};
-	private static final String[] NOMS_JOUEURS = {"Agent Rouge", "Agent Bleu", "Agent Vert", "Agent Jaune"};
-	private static final int NB_JOUEURS_MIN = 2;
-	private static final int NB_JOUEURS_MAX = 4;
+	private static final String   CHEMIN_PLATEAU    = "data/plateau.txt";
+	private static final String[] TYPES_ZONES       = {"HOPITAL", "FERME", "PETROLIER", "PORT", "TANK"};
+	private static final String[] NOMS_JOUEURS      = {"Agent Rouge", "Agent Bleu", "Agent Vert", "Agent Jaune"};
+	private static final int      NB_JOUEURS_MIN    = 2;
+	private static final int      NB_JOUEURS_MAX    = 4;
 
 	private JFrame         frame;
 	private JTextField     champLargeur;
 	private JTextField     champHauteur;
+	private JTextField     champNbLignes;
+	private JTextField     champNbColonnes;
 	private JSpinner       NbJoueurs;
 	private JLabel         labelErreur;
 	private Graphe         plateau;
@@ -38,9 +40,7 @@ public class ControleurConception
 		this.construireInterface();
 	}
 
-	/*-------------------------------*/
-	/* Construction de l'interface   */
-	/*-------------------------------*/
+	
 	private void construireInterface()
 	{
 		/*-------------------------------*/
@@ -80,17 +80,25 @@ public class ControleurConception
 		/* Création des composants       */
 		/*-------------------------------*/
 
-		JPanel panneau = new JPanel(new GridLayout(4, 2, 10, 10));
+		JPanel panneau = new JPanel(new GridLayout(6, 2, 10, 10));
 		panneau.setBackground(new Color(30, 30, 40));
 		panneau.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		JLabel labelLargeur = new JLabel("Largeur plateau:");
+		JLabel labelLargeur = new JLabel("Largeur plateau (px):");
 		labelLargeur.setForeground(Color.WHITE);
 		this.champLargeur = new JTextField("800");
 
-		JLabel labelHauteur = new JLabel("Hauteur plateau:");
+		JLabel labelHauteur = new JLabel("Hauteur plateau (px):");
 		labelHauteur.setForeground(Color.WHITE);
 		this.champHauteur = new JTextField("600");
+
+		JLabel labelNbLignes = new JLabel("Nombre de lignes:");
+		labelNbLignes.setForeground(Color.WHITE);
+		this.champNbLignes = new JTextField("4");
+
+		JLabel labelNbColonnes = new JLabel("Nombre de colonnes:");
+		labelNbColonnes.setForeground(Color.WHITE);
+		this.champNbColonnes = new JTextField("3");
 
 		JLabel labelNbJoueurs = new JLabel("Nombre d'agents (2-4):");
 		labelNbJoueurs.setForeground(Color.WHITE);
@@ -99,6 +107,11 @@ public class ControleurConception
 		this.labelErreur = new JLabel(" ");
 		this.labelErreur.setForeground(new Color(255, 100, 100));
 
+		JButton btnGenerer = new JButton("Générer la grille");
+		btnGenerer.setBackground(new Color(60, 100, 60));
+		btnGenerer.setForeground(Color.WHITE);
+		btnGenerer.addActionListener(e -> this.genererGrille());
+
 		/*-------------------------------*/
 		/* Positionnement des composants */
 		/*-------------------------------*/
@@ -106,11 +119,102 @@ public class ControleurConception
 		panneau.add(this.champLargeur);
 		panneau.add(labelHauteur);
 		panneau.add(this.champHauteur);
+		panneau.add(labelNbLignes);
+		panneau.add(this.champNbLignes);
+		panneau.add(labelNbColonnes);
+		panneau.add(this.champNbColonnes);
 		panneau.add(labelNbJoueurs);
 		panneau.add(this.NbJoueurs);
+		panneau.add(btnGenerer);
 		panneau.add(this.labelErreur);
 
 		return panneau;
+	}
+
+	/*-------------------------------*/
+	/* Génère une grille automatique */
+	/*-------------------------------*/
+	private void genererGrille()
+	{
+		try
+		{
+			int largeur    = Integer.parseInt(this.champLargeur   .getText().trim());
+			int hauteur    = Integer.parseInt(this.champHauteur   .getText().trim());
+			int nbLignes   = Integer.parseInt(this.champNbLignes  .getText().trim());
+			int nbColonnes = Integer.parseInt(this.champNbColonnes.getText().trim());
+
+			if (largeur <= 0 || hauteur <= 0 || nbLignes <= 0 || nbColonnes <= 0)
+			{
+				this.labelErreur.setText("Valeurs invalides");
+				return;
+			}
+
+		
+			this.plateau = new Graphe();
+			this.prochainId = 0;
+
+			// Calcul des marges et espacements
+			int margeGauche = 60;
+			int margeHaut   = 60;
+			int margeDroite = 60;
+			int margeBas    = 60;
+
+			int largeurDispo = largeur - margeGauche - margeDroite;
+			int hauteurDispo = hauteur - margeHaut - margeBas;
+
+			int espaceX = largeurDispo / (nbColonnes - 1);
+			int espaceY = hauteurDispo / (nbLignes - 1);
+
+			// Création des sommets
+			for (int ligne = 0; ligne < nbLignes; ligne++)
+			{
+				for (int col = 0; col < nbColonnes; col++)
+				{
+					int x = margeGauche + col * espaceX;
+					int y = margeHaut + ligne * espaceY;
+					
+					// Alterne les types de zones
+					int indexType = (ligne * nbColonnes + col) % TYPES_ZONES.length;
+					String type = TYPES_ZONES[indexType];
+					
+					Sommet sommet = new Sommet(this.prochainId, x, y, type);
+					this.plateau.ajouterSommet(sommet);
+					this.prochainId++;
+				}
+			}
+
+			// Génère les arêtes automatiquement
+			this.genererAretes();
+
+			this.panneauEdition.setPlateau(this.plateau);
+			this.labelErreur.setText("Grille " + nbLignes + "x" + nbColonnes + " générée !");
+		}
+		catch (NumberFormatException e)
+		{
+			this.labelErreur.setText("Erreur: valeurs non numériques");
+		}
+	}
+
+	// Génère les arêtes entre sommets proches 
+	private void genererAretes()
+	{
+		java.util.List<Sommet> sommets = this.plateau.getSommets();
+		
+		for (int i = 0; i < sommets.size(); i++)
+		{
+			Sommet s1 = sommets.get(i);
+			for (int j = i + 1; j < sommets.size(); j++)
+			{
+				Sommet s2 = sommets.get(j);
+				double distance = Math.hypot(s1.getX() - s2.getX(), s1.getY() - s2.getY());
+				
+				// Si distance < 150 pixels, on connecte
+				if (distance < 150)
+				{
+					this.plateau.ajouterArete(new Arete(s1.getId(), s2.getId()));
+				}
+			}
+		}
 	}
 
 	private JPanel creerPanneauEdition()
@@ -226,7 +330,7 @@ public class ControleurConception
 	private void activerModeSuppression()
 	{
 		this.panneauEdition.setModeAjout(false);
-		this.labelErreur.setText("Mode SUPPRESSION - Cliquez sur une station pour la supprimer");
+		this.labelErreur.setText("Mode SUPPRESSION - Cliquez droit sur une station pour la supprimer");
 	}
 
 	private void chargerPlateau()
@@ -279,10 +383,12 @@ public class ControleurConception
 
 	private void reinitialiserChamps()
 	{
-		this.champLargeur.setText("800");
-		this.champHauteur.setText("600");
-		this.NbJoueurs.setValue(2);
-		this.labelErreur.setText("Champs réinitialisés");
+		this.champLargeur   .setText("800");
+		this.champHauteur   .setText("600");
+		this.champNbLignes  .setText("4");
+		this.champNbColonnes.setText("3");
+		this.NbJoueurs      .setValue(2);
+		this.labelErreur    .setText("Champs réinitialisés");
 	}
 
 	/*-------------------------------*/
@@ -412,6 +518,9 @@ public class ControleurConception
 						ny = Math.max(rayonSommet, Math.min(ny, getHeight() - rayonSommet));
 						sommetDrag.setX(nx);
 						sommetDrag.setY(ny);
+						
+						// Regénère les arêtes après déplacement
+						regenererAretes();
 						repaint();
 					}
 				}
@@ -431,6 +540,7 @@ public class ControleurConception
 			Sommet nouveau = new Sommet(this.prochainId, x, y, this.zoneCourante);
 			this.plateau.ajouterSommet(nouveau);
 			this.prochainId++;
+			regenererAretes();
 			this.repaint();
 			labelErreur.setText("Station " + nouveau.getId() + " ajoutée (" + this.zoneCourante + ")");
 		}
@@ -438,13 +548,44 @@ public class ControleurConception
 		private void supprimerSommet(int id)
 		{
 			this.plateau.supprimerSommet(id);
+			regenererAretes();
 			this.repaint();
 			labelErreur.setText("Station " + id + " supprimée");
+		}
+
+		/*-------------------------------*/
+		/* Regénère les arêtes auto      */
+		/*-------------------------------*/
+		private void regenererAretes()
+		{
+			// Supprime toutes les arêtes
+			java.util.List<Arete> anciennesAretes = new java.util.ArrayList<>(this.plateau.getAretes());
+			for (Arete a : anciennesAretes)
+			{
+				this.plateau.supprimerArete(a);
+			}
+
+			// Recrée les arêtes entre sommets proches
+			java.util.List<Sommet> sommets = this.plateau.getSommets();
+			for (int i = 0; i < sommets.size(); i++)
+			{
+				Sommet s1 = sommets.get(i);
+				for (int j = i + 1; j < sommets.size(); j++)
+				{
+					Sommet s2 = sommets.get(j);
+					double distance = Math.hypot(s1.getX() - s2.getX(), s1.getY() - s2.getY());
+					if (distance < 150)
+					{
+						this.plateau.ajouterArete(new Arete(s1.getId(), s2.getId()));
+					}
+				}
+			}
 		}
 
 		public void setPlateau(Graphe g)
 		{
 			this.plateau = g;
+			regenererAretes();
 			this.repaint();
 		}
 
@@ -479,7 +620,8 @@ public class ControleurConception
 				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
 
-			g2.setColor(new Color(180, 180, 200));
+			// Dessine les arêtes 
+			g2.setColor(new Color(200, 180, 100));
 			g2.setStroke(new BasicStroke(2.5f));
 			for (Arete a : this.plateau.getAretes())
 			{
@@ -488,6 +630,7 @@ public class ControleurConception
 				if (s1 != null && s2 != null) g2.drawLine(s1.getX(), s1.getY(), s2.getX(), s2.getY());
 			}
 
+			// Dessine les sommets
 			for (Sommet s : this.plateau.getSommets())
 			{
 				Color couleur = Sommet.getCouleurParType(s.getTypeZone());
@@ -505,6 +648,11 @@ public class ControleurConception
 				g2.setStroke(new BasicStroke(1.5f));
 				g2.drawOval(s.getX() - this.rayonSommet, s.getY() - this.rayonSommet,
 						   this.rayonSommet * 2, this.rayonSommet * 2);
+				
+				// Affiche l'ID
+				g2.setColor(new Color(200, 200, 200, 150));
+				g2.setFont(new Font("SansSerif", Font.PLAIN, 9));
+				g2.drawString(String.valueOf(s.getId()), s.getX() - 4, s.getY() - this.rayonSommet - 3);
 			}
 		}
 	}

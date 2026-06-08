@@ -3,8 +3,6 @@ package jeu.controleur;
 import commun.Arete;
 import commun.Graphe;
 import commun.Sommet;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
@@ -12,24 +10,27 @@ import java.io.File;
 import java.util.*;
 import java.util.List;
 import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
-/*-------------------------------*/
-/* Contrôleur principal du jeu   */
-/*-------------------------------*/
+
 public class ControleurJeu
 {
-	private static final int NB_MANCHES = 4;
-	private static final String[] TYPES_ZONES = {"HOPITAL", "FERME", "PETROLIER", "PORT", "TANK"};
-	private static final Color[] COULEURS_JOUEURS = {new Color(220,60,60), new Color(60,100,220), new Color(60,180,60), new Color(220,200,40)};
+	private static final int      NB_MANCHES       = 4;
+	private static final int      MAX_STATIONS     = 100;
+	private static final String[] TYPES_ZONES      = {"HOPITAL", "FERME", "PETROLIER", "PORT", "TANK"};
+	private static final String[] BLOCS            = {"OUEST", "EST", "NON_ALIGNE", "CHINOIS"};
+	private static final Color[]  COULEURS_JOUEURS = {new Color(220,60,60), new Color(60,100,220), new Color(60,180,60), new Color(220,200,40)};
 
 	private List<String> nomsJoueurs;
-	private int          mancheCourante, joueurCourantIdx;
+	private int          mancheCourante;
+	private int          joueurCourantIdx;
 	private boolean      partieTerminee;
 
-	private List<List<Arete>>   cheminsParJoueur;
-	private List<Set<Integer>>  visitesParJoueur;
-	private List<Set<String>>   zonesVisitesParJoueur;
-	private int[]               scores;
+	private List<List<Arete>>  cheminsParJoueur;
+	private List<Set<Integer>> visitesParJoueur;
+	private List<Set<String>>  blocsVisitesParJoueur;
+	private int[]              scores;
 
 	private List<String> piocheCartes;
 	private List<String> cartesRetournees;
@@ -37,19 +38,22 @@ public class ControleurJeu
 	private String       carteActive;
 	private boolean      carteActiveEstJoker;
 
-	private Graphe               plateau;
-	private int                  sommetSelectionne;
-	private Map<Integer, String> idToZone;
+	private Graphe plateau;
+	private int    sommetSelectionne;
+	
+	
+	private String[] zoneParId;
+	private String[] blocParId;
 
 	private JFrame         frame;
 	private PanneauPlateau panneauPlateau;
 	private JLabel         labelManche, labelJoueur, labelCarteActive, labelMessage;
 	private JTextArea      zoneScores;
-	private JTextArea      zoneZonesVisites; 
+	private JTextArea      zoneBlocsVisites;
 	private JPanel         panneauCartes;
-	private Image          fondImage;
 
-	
+
+	private Image fondImage;
 	private Image imageHopital;
 	private Image imageFerme;
 	private Image imagePetrolier;
@@ -67,89 +71,55 @@ public class ControleurJeu
 		this.sommetSelectionne   = -1;
 		this.carteActive         = "";
 		this.carteActiveEstJoker = false;
-		this.idToZone            = new HashMap<>();
+		this.zoneParId           = new String[MAX_STATIONS];
+		this.blocParId           = new String[MAX_STATIONS];
 		this.chargerImages();
 		this.chargerFond();
 	}
 
 	/*-------------------------------*/
-	/* Charger les images des cartes  */
+	/* Charge les images des cartes  */
 	/*-------------------------------*/
 	private void chargerImages()
 	{
 		try
 		{
-			File fichierHopital = new File("images/hopital.png");
-			if (fichierHopital.exists())
-			{
-				this.imageHopital = ImageIO.read(fichierHopital);
-				System.out.println("Image hopital chargée");
-			}
-
-			File fichierFerme = new File("images/ferme.png");
-			if (fichierFerme.exists())
-			{
-				this.imageFerme = ImageIO.read(fichierFerme);
-				System.out.println("Image ferme chargée");
-			}
-
-			File fichierPetrolier = new File("images/petrolier.png");
-			if (fichierPetrolier.exists())
-			{
-				this.imagePetrolier = ImageIO.read(fichierPetrolier);
-				System.out.println("Image petrolier chargée");
-			}
-
-			File fichierPort = new File("images/port.png");
-			if (fichierPort.exists())
-			{
-				this.imagePort = ImageIO.read(fichierPort);
-				System.out.println("Image port chargée");
-			}
-
-			File fichierTank = new File("images/tank.png");
-			if (fichierTank.exists())
-			{
-				this.imageTank = ImageIO.read(fichierTank);
-				System.out.println("Image tank chargée");
-			}
-
-			File fichierJoker = new File("images/joker.png");
-			if (fichierJoker.exists())
-			{
-				this.imageJoker = ImageIO.read(fichierJoker);
-				System.out.println("Image joker chargée");
-			}
+			File f = new File("images/hopital.png");
+			if (f.exists()) this.imageHopital = ImageIO.read(f);
+			
+			f = new File("images/ferme.png");
+			if (f.exists()) this.imageFerme = ImageIO.read(f);
+			
+			f = new File("images/petrolier.png");
+			if (f.exists()) this.imagePetrolier = ImageIO.read(f);
+			
+			f = new File("images/port.png");
+			if (f.exists()) this.imagePort = ImageIO.read(f);
+			
+			f = new File("images/tank.png");
+			if (f.exists()) this.imageTank = ImageIO.read(f);
+			
+			f = new File("images/joker.png");
+			if (f.exists()) this.imageJoker = ImageIO.read(f);
 		}
-		catch (Exception e)
-		{
-			System.out.println("Erreur chargement images: " + e.getMessage());
-		}
+		catch (Exception e) { System.out.println("Erreur chargement images"); }
 	}
 
 	/*-------------------------------*/
-	/* Charger l'image de fond        */
+	/* Charge l'image de fond        */
 	/*-------------------------------*/
 	private void chargerFond()
 	{
 		try
 		{
-			File fichierFond = new File("images/fond_principale.png");
-			if (fichierFond.exists())
-			{
-				this.fondImage = ImageIO.read(fichierFond);
-				System.out.println("Fond charge");
-			}
+			File f = new File("images/fond_principale.png");
+			if (f.exists()) this.fondImage = ImageIO.read(f);
 		}
-		catch (Exception e)
-		{
-			this.fondImage = null;
-		}
+		catch (Exception e) { this.fondImage = null; }
 	}
 
 	/*-------------------------------*/
 	/* Recupere l'image d'une carte  */
-	/* selon son type                */
 	/*-------------------------------*/
 	private Image getImageParCarte(String typeCarte)
 	{
@@ -163,6 +133,18 @@ public class ControleurJeu
 	}
 
 	/*-------------------------------*/
+	/* Determine le bloc d'un sommet */
+	/*-------------------------------*/
+	private String getBlocParPosition(int x, int y)
+	{
+		if (x < 300 && y < 300) return "OUEST";
+		if (x > 500 && y < 300) return "EST";
+		if (x < 300 && y > 400) return "NON_ALIGNE";
+		if (x > 500 && y > 400) return "CHINOIS";
+		return "CENTRE";
+	}
+
+	/*-------------------------------*/
 	/* Lancement de la partie        */
 	/*-------------------------------*/
 	public void lancerPartie(List<String> nomsJoueurs, Graphe plateau)
@@ -170,21 +152,25 @@ public class ControleurJeu
 		this.nomsJoueurs = nomsJoueurs;
 		this.plateau     = plateau;
 
+		// Remplit les tableaux
 		for (Sommet s : this.plateau.getSommets())
 		{
-			this.idToZone.put(s.getId(), s.getTypeZone());
+			int id = s.getId();
+			this.zoneParId[id] = s.getTypeZone();
+			this.blocParId[id] = this.getBlocParPosition(s.getX(), s.getY());
+			System.out.println("Station " + id + " -> " + this.blocParId[id]);
 		}
 
-		this.scores           = new int[nomsJoueurs.size()];
-		this.cheminsParJoueur = new ArrayList<>();
-		this.visitesParJoueur = new ArrayList<>();
-		this.zonesVisitesParJoueur = new ArrayList<>();
+		this.scores                = new int[nomsJoueurs.size()];
+		this.cheminsParJoueur      = new ArrayList<>();
+		this.visitesParJoueur      = new ArrayList<>();
+		this.blocsVisitesParJoueur = new ArrayList<>();
 
 		for (int i = 0; i < nomsJoueurs.size(); i++)
 		{
 			this.cheminsParJoueur.add(new ArrayList<>());
 			this.visitesParJoueur.add(new HashSet<>());
-			this.zonesVisitesParJoueur.add(new HashSet<>());
+			this.blocsVisitesParJoueur.add(new HashSet<>());
 		}
 
 		this.construireInterface();
@@ -197,26 +183,14 @@ public class ControleurJeu
 	private void initialiserPioche()
 	{
 		this.piocheCartes = new ArrayList<>();
-
-		// Ajoute 2 cartes de chaque type
 		for (String type : TYPES_ZONES)
 		{
-			for (int i = 0; i < 2; i++)
-			{
-				this.piocheCartes.add(type);
-			}
+			for (int i = 0; i < 2; i++) this.piocheCartes.add(type);
 		}
-
-		// Ajoute 1 carte JOKER
 		this.piocheCartes.add("JOKER");
-
-		// Melange la pioche
 		Collections.shuffle(this.piocheCartes);
-
 		this.cartesRetournees = new ArrayList<>();
 		this.nbCartesPiochees = 0;
-
-		System.out.println("Pioche cree avec " + this.piocheCartes.size() + " cartes");
 	}
 
 	/*-------------------------------*/
@@ -232,12 +206,11 @@ public class ControleurJeu
 			return;
 		}
 
-		// Vide les chemins et visites des joueurs
 		for (int i = 0; i < this.nomsJoueurs.size(); i++)
 		{
 			this.cheminsParJoueur.get(i).clear();
 			this.visitesParJoueur.get(i).clear();
-			this.zonesVisitesParJoueur.get(i).clear();
+			this.blocsVisitesParJoueur.get(i).clear();
 		}
 
 		this.joueurCourantIdx  = 0;
@@ -246,7 +219,7 @@ public class ControleurJeu
 		this.initialiserPioche();
 		this.piocherCarte();
 
-		this.afficherMessage("MANCHE " + this.mancheCourante + " - Connectez votre réseau !");
+		this.afficherMessage("MANCHE " + this.mancheCourante);
 		this.mettreAJourInterface();
 	}
 
@@ -268,12 +241,12 @@ public class ControleurJeu
 		if (this.carteActive.equals("JOKER"))
 		{
 			this.carteActiveEstJoker = true;
-			this.afficherMessage("CARTE JOKER ! Vous pouvez connecter n'importe quelle station !");
+			this.afficherMessage("JOKER !");
 		}
 		else
 		{
 			this.carteActiveEstJoker = false;
-			this.afficherMessage("Carte piochee: " + this.carteActive);
+			this.afficherMessage("Carte: " + this.carteActive);
 		}
 
 		this.mettreAJourInterface();
@@ -289,7 +262,7 @@ public class ControleurJeu
 
 		if (this.joueurCourantIdx == 0)
 		{
-			if (this.nbCartesPiochees >= 11)  // 10 cartes + 1 joker
+			if (this.nbCartesPiochees >= 11)
 			{
 				this.finirManche();
 				return;
@@ -301,7 +274,9 @@ public class ControleurJeu
 		this.mettreAJourInterface();
 	}
 
-	//Fin de la manche: calcule les scores, affiche un recap et demarre la manche suivante
+	/*-------------------------------*/
+	/* Termine la manche             */
+	/*-------------------------------*/
 	private void finirManche()
 	{
 		String recap = "=== FIN MANCHE " + this.mancheCourante + " ===\n\n";
@@ -311,83 +286,65 @@ public class ControleurJeu
 			int score = this.calculerScoreManche(i);
 			this.scores[i] = this.scores[i] + score;
 
-			String zones = "";
-			for (String z : this.zonesVisitesParJoueur.get(i))
+			String blocs = "";
+			for (String b : this.blocsVisitesParJoueur.get(i))
 			{
-				zones = zones + " " + z;
+				blocs = blocs + " " + b;
 			}
 
 			recap = recap + this.nomsJoueurs.get(i) + "\n";
-			recap = recap + "   Zones visitees:" + zones + "\n";
-			recap = recap + "   Score de la manche: +" + score + "\n";
-			recap = recap + "   Total: " + this.scores[i] + " points\n\n";
+			recap = recap + "   Blocs: " + (blocs.isEmpty() ? "aucun" : blocs) + "\n";
+			recap = recap + "   Score: +" + score + "\n";
+			recap = recap + "   Total: " + this.scores[i] + " pts\n\n";
 		}
 
-		JOptionPane.showMessageDialog(this.frame, recap, "Résultats manche " + this.mancheCourante, JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(this.frame, recap, "Manche " + this.mancheCourante, JOptionPane.INFORMATION_MESSAGE);
 		this.demarrerManche();
 	}
 
-	
-	// Calcule le score d'un joueur  pour la manche
+	/*-------------------------------*/
+	/* Calcule le score              */
+	/*-------------------------------*/
 	private int calculerScoreManche(int idxJoueur)
 	{
 		List<Arete> chemin = this.cheminsParJoueur.get(idxJoueur);
+		if (chemin.isEmpty()) return 0;
 
-		if (chemin.isEmpty())
-		{
-			return 0;
-		}
+		Set<String> blocs = this.blocsVisitesParJoueur.get(idxJoueur);
+		if (blocs.isEmpty()) return 0;
 
-		Set<String> zones = this.zonesVisitesParJoueur.get(idxJoueur);
-
-		if (zones.isEmpty())
-		{
-			return 0;
-		}
-
-		Map<String, Integer> stationsParZone = new HashMap<>();
+		Map<String, Integer> stationsParBloc = new HashMap<>();
 		Set<Integer> sommetsVisites = this.visitesParJoueur.get(idxJoueur);
 
 		for (int id : sommetsVisites)
 		{
-			String zone = this.idToZone.get(id);
-			if (zone != null)
+			String bloc = this.blocParId[id];
+			if (bloc != null && !bloc.equals("CENTRE"))
 			{
-				int nbActuel = 0;
-				if (stationsParZone.containsKey(zone))
-				{
-					nbActuel = stationsParZone.get(zone);
-				}
-				stationsParZone.put(zone, nbActuel + 1);
+				int nb = stationsParBloc.getOrDefault(bloc, 0);
+				stationsParBloc.put(bloc, nb + 1);
 			}
 		}
 
-		int nbZones = zones.size();
-
+		int nbBlocs     = blocs.size();
 		int maxStations = 0;
-		for (int nb : stationsParZone.values())
+		for (int nb : stationsParBloc.values())
 		{
-			if (nb > maxStations)
-			{
-				maxStations = nb;
-			}
+			if (nb > maxStations) maxStations = nb;
 		}
 
-		return nbZones * maxStations;
+		return nbBlocs * maxStations;
 	}
 
-	
-	//Termine la partie
+	/*-------------------------------*/
+	/* Termine la partie             */
+	/*-------------------------------*/
 	private void terminerPartie()
 	{
 		this.partieTerminee = true;
 
-		// Trie les joueurs par score
 		Integer[] indices = new Integer[this.nomsJoueurs.size()];
-		for (int i = 0; i < indices.length; i++)
-		{
-			indices[i] = i;
-		}
+		for (int i = 0; i < indices.length; i++) indices[i] = i;
 
 		for (int i = 0; i < indices.length - 1; i++)
 		{
@@ -404,66 +361,55 @@ public class ControleurJeu
 
 		String classement = "🏆 CLASSEMENT FINAL 🏆\n\n";
 		int rang = 1;
-
 		for (int idx : indices)
 		{
 			classement = classement + rang + ". " + this.nomsJoueurs.get(idx) + " — " + this.scores[idx] + " points\n";
-			rang = rang + 1;
+			rang++;
 		}
 
 		JOptionPane.showMessageDialog(this.frame, classement, "Fin de la partie", JOptionPane.INFORMATION_MESSAGE);
-		this.afficherMessage("Partie terminee !");
 	}
 
-	
-	//Tente de tracer une route     
+	/*-------------------------------*/
+	/* Tente de tracer une route     */
+	/*-------------------------------*/
 	public boolean tenterTracerRoute(int idSrc, int idCible)
 	{
-		// Verifications de base
 		if (this.partieTerminee)
 		{
 			this.afficherMessage("Partie terminee");
 			return false;
 		}
 
-		if (idSrc == idCible)
-		{
-			return false;
-		}
+		if (idSrc == idCible) return false;
 
 		List<Arete> chemin   = this.cheminsParJoueur.get(this.joueurCourantIdx);
 		Set<Integer> visites = this.visitesParJoueur.get(this.joueurCourantIdx);
 
-		Sommet sCible    = this.plateau.trouverSommet(idCible);
-		String zoneCible = this.idToZone.get(idCible);
+		String zoneCible = this.zoneParId[idCible];
 
-		// Vérifie la carte sauf si c'est un JOKER
-		if (!this.carteActiveEstJoker)
+		// Vérifie la carte
+		if (!this.carteActiveEstJoker && !this.carteActive.equals(zoneCible))
 		{
-			if (sCible != null && !this.carteActive.equals(zoneCible))
-			{
-				this.afficherMessage("Vous n'avez pas la carte pour " + zoneCible);
-				return false;
-			}
+			this.afficherMessage("Il faut la carte " + zoneCible);
+			return false;
 		}
 
-		// Vérifie qu'on ne repasse pas sur une station deja visitée
+		// Vérifie visite
 		if (!chemin.isEmpty() && visites.contains(idCible))
 		{
-			this.afficherMessage("Station deja visitée");
+			this.afficherMessage("Station deja visitee");
 			return false;
 		}
 
 		Arete nouvelleArete = new Arete(idSrc, idCible);
-
-		// Vérifie que l'arete n'éxiste pas deja
 		if (chemin.contains(nouvelleArete))
 		{
 			this.afficherMessage("Cable deja existant");
 			return false;
 		}
 
-		// Vérifie la linearite (pas d'embranchement)
+		// Vérifies si linéaire
 		if (!chemin.isEmpty())
 		{
 			int[] extremites = this.trouverExtremites(chemin);
@@ -473,7 +419,7 @@ public class ControleurJeu
 				return false;
 			}
 
-			boolean srcExtremite   = (idSrc == extremites[0] || idSrc == extremites[1]);
+			boolean srcExtremite   = (idSrc   == extremites[0] || idSrc   == extremites[1]);
 			boolean cibleExtremite = (idCible == extremites[0] || idCible == extremites[1]);
 
 			if (!srcExtremite && !cibleExtremite)
@@ -482,210 +428,136 @@ public class ControleurJeu
 				return false;
 			}
 
-			// Ajuste l'ordre si necessaire
 			if (cibleExtremite && !srcExtremite)
 			{
 				int tmp = idSrc;
-				idSrc   = idCible;
+				idSrc = idCible;
 				idCible = tmp;
 				nouvelleArete = new Arete(idSrc, idCible);
 			}
 		}
 
-		// Vérifie le degré max 
+		// Vérifie degré max
 		if (this.getDegreDansChemin(idSrc, chemin) >= 2)
 		{
-			this.afficherMessage("Cette station a déjà 2 connexions");
+			this.afficherMessage("Cette station a deja 2 connexions");
 			return false;
 		}
-
 		if (this.getDegreDansChemin(idCible, chemin) >= 2)
 		{
-			this.afficherMessage("Cette station a déjà 2 connexions");
+			this.afficherMessage("Cette station a deja 2 connexions");
 			return false;
 		}
 
-		// Vérifie qu'il n'y a pas de croisement
+		// Vérifie croisement
 		if (this.sectionCroise(idSrc, idCible, chemin))
 		{
 			this.afficherMessage("Les cables ne doivent pas se croiser");
 			return false;
 		}
 
-		// Verifie que l'arete existe dans le graphe
+		// Vérifie arete
 		if (!this.areteExisteDansGraphe(idSrc, idCible))
 		{
-			this.afficherMessage("Ces stations ne sont pas reliables");
+			this.afficherMessage("Ces stations ne sont pas reliees");
 			return false;
 		}
 
-		// Ajoute l'arete
+		// Ajoute
 		chemin.add(nouvelleArete);
 
-		// Marque les sommets comme visites
 		if (visites.isEmpty())
 		{
 			visites.add(idSrc);
-			String zoneSrc = this.idToZone.get(idSrc);
-			if (zoneSrc != null)
+			String blocSrc = this.blocParId[idSrc];
+			if (blocSrc != null && !blocSrc.equals("CENTRE"))
 			{
-				this.zonesVisitesParJoueur.get(this.joueurCourantIdx).add(zoneSrc);
+				this.blocsVisitesParJoueur.get(this.joueurCourantIdx).add(blocSrc);
 			}
 		}
 
 		visites.add(idCible);
-
-		if (zoneCible != null)
+		String blocCible = this.blocParId[idCible];
+		if (blocCible != null && !blocCible.equals("CENTRE"))
 		{
-			this.zonesVisitesParJoueur.get(this.joueurCourantIdx).add(zoneCible);
+			this.blocsVisitesParJoueur.get(this.joueurCourantIdx).add(blocCible);
 		}
 
 		this.sommetSelectionne = -1;
 
-		int nbZones = this.zonesVisitesParJoueur.get(this.joueurCourantIdx).size();
-		this.afficherMessage("Cable connecte ! Zones visitees: " + nbZones + "/5");
+		int nbBlocs = this.blocsVisitesParJoueur.get(this.joueurCourantIdx).size();
+		this.afficherMessage("Cable connecte ! Blocs: " + nbBlocs + "/4");
 
 		this.mettreAJourInterface();
 		return true;
 	}
 
-	// Calcule le degre dans le chemin
 	private int getDegreDansChemin(int id, List<Arete> chemin)
 	{
 		int d = 0;
-		for (Arete a : chemin)
-		{
-			if (a.contient(id))
-			{
-				d++;
-			}
-		}
+		for (Arete a : chemin) if (a.contient(id)) d++;
 		return d;
 	}
 
-	
-	// Trouve les extremites du chemin
 	private int[] trouverExtremites(List<Arete> chemin)
 	{
-		if (chemin.isEmpty())
-		{
-			return null;
-		}
+		if (chemin.isEmpty()) return null;
 
 		Map<Integer, Integer> degres = new HashMap<>();
-
 		for (Arete a : chemin)
 		{
-			int srcDeg = 0;
-			if (degres.containsKey(a.getSrc()))
-			{
-				srcDeg = degres.get(a.getSrc());
-			}
-			degres.put(a.getSrc(), srcDeg + 1);
-
-			int cibleDeg = 0;
-			if (degres.containsKey(a.getCible()))
-			{
-				cibleDeg = degres.get(a.getCible());
-			}
-			degres.put(a.getCible(), cibleDeg + 1);
+			degres.put(a.getSrc(),   degres.getOrDefault(a.getSrc(), 0) + 1);
+			degres.put(a.getCible(), degres.getOrDefault(a.getCible(), 0) + 1);
 		}
 
 		List<Integer> extremites = new ArrayList<>();
-
-		for (Map.Entry<Integer, Integer> entry : degres.entrySet())
+		for (Map.Entry<Integer, Integer> e : degres.entrySet())
 		{
-			if (entry.getValue() == 1)
-			{
-				extremites.add(entry.getKey());
-			}
+			if (e.getValue() == 1) extremites.add(e.getKey());
 		}
 
-		if (extremites.size() == 2)
-		{
-			int[] result = new int[2];
-			result[0]    = extremites.get(0);
-			result[1]    = extremites.get(1);
-			return result;
-		}
-
-		if (chemin.size() == 1)
-		{
-			int[] result  = new int[2];
-			result[0]     = chemin.get(0).getSrc();
-			result[1]     = chemin.get(0).getCible();
-			return result;
-		}
-
+		if (extremites.size() == 2) return new int[]{extremites.get(0), extremites.get(1)};
+		if (chemin.size()     == 1) return new int[]{chemin.get(0).getSrc(), chemin.get(0).getCible()};
 		return null;
 	}
 
-	
-	//Verifie si deux segments se croisent
 	private boolean sectionCroise(int idSrc, int idCible, List<Arete> chemin)
 	{
 		Sommet sSrc   = this.plateau.trouverSommet(idSrc);
 		Sommet sCible = this.plateau.trouverSommet(idCible);
 
-		if (sSrc == null || sCible == null)
-		{
-			return false;
-		}
+		if (sSrc == null || sCible == null) return false;
 
-		double x1 = sSrc.getX();
-		double y1 = sSrc.getY();
-		double x2 = sCible.getX();
-		double y2 = sCible.getY();
+		double x1 = sSrc.getX(), y1 = sSrc.getY(), x2 = sCible.getX(), y2 = sCible.getY();
 
 		for (Arete a : chemin)
 		{
-			if (a.contient(idSrc) || a.contient(idCible))
-			{
-				continue;
-			}
+			if (a.contient(idSrc) || a.contient(idCible)) continue;
 
 			Sommet sA = this.plateau.trouverSommet(a.getSrc());
 			Sommet sB = this.plateau.trouverSommet(a.getCible());
+			if (sA == null || sB == null) continue;
 
-			if (sA == null || sB == null)
-			{
-				continue;
-			}
-
-			double x3 = sA.getX();
-			double y3 = sA.getY();
-			double x4 = sB.getX();
-			double y4 = sB.getY();
-
-			if (Line2D.linesIntersect(x1, y1, x2, y2, x3, y3, x4, y4))
-			{
-				return true;
-			}
+			double x3 = sA.getX(), y3 = sA.getY(), x4 = sB.getX(), y4 = sB.getY();
+			if (Line2D.linesIntersect(x1, y1, x2, y2, x3, y3, x4, y4)) return true;
 		}
-
 		return false;
 	}
 
-	
-	// Verifie si l'arete existe  dans le graphe du plateau    
 	private boolean areteExisteDansGraphe(int idSrc, int idCible)
 	{
 		for (Arete a : this.plateau.getAretes())
 		{
-			if (a.contient(idSrc) && a.contient(idCible))
-			{
-				return true;
-			}
+			if (a.contient(idSrc) && a.contient(idCible)) return true;
 		}
 		return false;
 	}
 
-	// Construire l'interface graphique
+	/*-------------------------------*/
+	/* Interface graphique           */
+	/*-------------------------------*/
 	private void construireInterface()
 	{
-		/*-------------------------------*/
-		/* Création des composants       */
-		/*-------------------------------*/
 		this.frame = new JFrame("Operation Reseau Rouge");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -694,67 +566,51 @@ public class ControleurJeu
 		panneauPrincipal.setBorder(new EmptyBorder(10, 10, 10, 10));
 
 		this.panneauPlateau = new PanneauPlateau();
-
 		JPanel panneauInfo  = this.creerPanneauInfo();
-
-		this.labelMessage = new JLabel(" ");
+		this.labelMessage   = new JLabel(" ");
 		this.labelMessage.setForeground(new Color(200, 200, 180));
 		this.labelMessage.setFont(new Font("Serif", Font.ITALIC, 13));
-		this.labelMessage.setBorder(new EmptyBorder(4, 8, 4, 8));
 
-		/*-------------------------------*/
-		/* Positionnement des composants */
-		/*-------------------------------*/
 		panneauPrincipal.add(this.panneauPlateau, BorderLayout.CENTER);
 		panneauPrincipal.add(panneauInfo, BorderLayout.EAST);
 		panneauPrincipal.add(this.labelMessage, BorderLayout.SOUTH);
 
-		/*-------------------------------*/
-		/* Activation des composants     */
-		/*-------------------------------*/
 		this.frame.setContentPane(panneauPrincipal);
 		this.frame.setSize(1200, 800);
 		this.frame.setLocationRelativeTo(null);
 		this.frame.setVisible(true);
 	}
 
-	
-	// Panneau d'informations
 	private JPanel creerPanneauInfo()
 	{
 		/*-------------------------------*/
 		/* Création des composants       */
 		/*-------------------------------*/
 		JPanel panneau = new JPanel();
-		panneau.setLayout(new BoxLayout(panneau, BoxLayout.Y_AXIS));
+		panneau.setLayout(new GridLayout(11, 1, 5, 5));  // 11 lignes, 1 colonne, espace 5px
 		panneau.setBackground(new Color(40, 40, 50));
 		panneau.setBorder(new EmptyBorder(10, 10, 10, 10));
 		panneau.setPreferredSize(new Dimension(280, 0));
 
-		JLabel titre = new JLabel("🔴 OPERATION RESEAU ROUGE");
+		JLabel titre = new JLabel("🔴 OPERATION RESEAU ROUGE", JLabel.CENTER);
 		titre.setForeground(new Color(220, 80, 80));
 		titre.setFont(new Font("Serif", Font.BOLD, 14));
-		titre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		this.labelManche = new JLabel("Manche 1 / " + NB_MANCHES);
+		this.labelManche = new JLabel("Manche 1 / " + NB_MANCHES, JLabel.CENTER);
 		this.labelManche.setForeground(new Color(200, 200, 160));
-		this.labelManche.setFont(new Font("SansSerif", Font.BOLD, 13));
 
-		this.labelJoueur = new JLabel("Agent: —");
+		this.labelJoueur = new JLabel("Agent: —", JLabel.CENTER);
 		this.labelJoueur.setForeground(Color.WHITE);
-		this.labelJoueur.setFont(new Font("SansSerif", Font.BOLD, 13));
 
-		this.labelCarteActive = new JLabel("Carte: AUCUNE");
+		this.labelCarteActive = new JLabel("Carte: AUCUNE", JLabel.CENTER);
 		this.labelCarteActive.setForeground(new Color(180, 220, 180));
 		this.labelCarteActive.setFont(new Font("SansSerif", Font.BOLD, 13));
 
-		this.panneauCartes = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		this.panneauCartes = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		this.panneauCartes.setBackground(new Color(40, 40, 50));
-		this.panneauCartes.setBorder(BorderFactory.createTitledBorder("Cartes piochées"));
-		this.panneauCartes.setMaximumSize(new Dimension(260, 200));
-		this.panneauCartes.setPreferredSize(new Dimension(260, 180));
+		this.panneauCartes.setBorder(BorderFactory.createTitledBorder("Cartes piochees"));
 
-		JLabel lblScores = new JLabel("SCORES");
+		JLabel lblScores = new JLabel("SCORES", JLabel.CENTER);
 		lblScores.setForeground(new Color(220, 180, 80));
 		lblScores.setFont(new Font("Serif", Font.BOLD, 13));
 
@@ -765,73 +621,48 @@ public class ControleurJeu
 		this.zoneScores.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		this.zoneScores.setBorder(BorderFactory.createLineBorder(new Color(80, 70, 60)));
 
-		JLabel lblZones = new JLabel("ZONES VISITEES");
-		lblZones.setForeground(new Color(220, 180, 80));
-		lblZones.setFont(new Font("Serif", Font.BOLD, 13));
+		JLabel lblBlocs = new JLabel("BLOCS PARCOURUS", JLabel.CENTER);
+		lblBlocs.setForeground(new Color(220, 180, 80));
+		lblBlocs.setFont(new Font("Serif", Font.BOLD, 13));
 
-		this.zoneZonesVisites = new JTextArea(5, 18);
-		this.zoneZonesVisites.setEditable(false);
-		this.zoneZonesVisites.setBackground(new Color(30, 30, 40));
-		this.zoneZonesVisites.setForeground(new Color(200, 200, 180));
-		this.zoneZonesVisites.setFont(new Font("Monospaced", Font.PLAIN, 12));
-		this.zoneZonesVisites.setBorder(BorderFactory.createLineBorder(new Color(80, 70, 60)));
+		this.zoneBlocsVisites = new JTextArea(5, 18);
+		this.zoneBlocsVisites.setEditable(false);
+		this.zoneBlocsVisites.setBackground(new Color(30, 30, 40));
+		this.zoneBlocsVisites.setForeground(new Color(200, 200, 180));
+		this.zoneBlocsVisites.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		this.zoneBlocsVisites.setBorder(BorderFactory.createLineBorder(new Color(80, 70, 60)));
 
-		JButton btnPasser = this.creerBouton("⏭ Passer le tour", new Color(100, 70, 50));
-		btnPasser.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		JButton btnAnnulerSelection = this.creerBouton(" Annuler selection", new Color(120, 60, 60));
-		btnAnnulerSelection.setAlignmentX(Component.CENTER_ALIGNMENT);
+		JButton btnPasser  = this.creerBouton("⏭ Passer le tour", new Color(100, 70, 50));
+		JButton btnAnnuler = this.creerBouton("↩ Annuler selection", new Color(120, 60, 60));
 
 		/*-------------------------------*/
 		/* Positionnement des composants */
 		/*-------------------------------*/
 		panneau.add(titre);
-		panneau.add(Box.createVerticalStrut(12));
 		panneau.add(this.labelManche);
-		panneau.add(Box.createVerticalStrut(6));
 		panneau.add(this.labelJoueur);
-		panneau.add(Box.createVerticalStrut(10));
 		panneau.add(this.labelCarteActive);
-		panneau.add(Box.createVerticalStrut(6));
 		panneau.add(this.panneauCartes);
-		panneau.add(Box.createVerticalStrut(10));
 		panneau.add(lblScores);
 		panneau.add(new JScrollPane(this.zoneScores));
-		panneau.add(Box.createVerticalStrut(10));
-		panneau.add(lblZones);
-		panneau.add(new JScrollPane(this.zoneZonesVisites));
-		panneau.add(Box.createVerticalStrut(10));
+		panneau.add(lblBlocs);
+		panneau.add(new JScrollPane(this.zoneBlocsVisites));
 		panneau.add(btnPasser);
-		panneau.add(Box.createVerticalStrut(6));
-		panneau.add(btnAnnulerSelection);
+		panneau.add(btnAnnuler);
 
 		/*-------------------------------*/
 		/* Activation des composants     */
 		/*-------------------------------*/
-		btnPasser.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				passerTour();
-			}
-		});
-
-		btnAnnulerSelection.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				sommetSelectionne = -1;
-				afficherMessage("Selection annulée");
-				mettreAJourInterface();
-			}
+		btnPasser.addActionListener(e -> this.passerTour());
+		btnAnnuler.addActionListener(e -> {
+			this.sommetSelectionne = -1;
+			this.afficherMessage("Selection annulee");
+			this.mettreAJourInterface();
 		});
 
 		return panneau;
 	}
-
-	/*-------------------------------*/
-	/* Crée un bouton                */
-	/*-------------------------------*/
+	
 	private JButton creerBouton(String texte, Color couleur)
 	{
 		JButton btn = new JButton(texte);
@@ -840,93 +671,51 @@ public class ControleurJeu
 		btn.setFocusPainted(false);
 		btn.setBorder(new EmptyBorder(8, 12, 8, 12));
 		btn.setFont(new Font("SansSerif", Font.BOLD, 12));
-		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		btn.setMaximumSize(new Dimension(240, 40));
 		return btn;
 	}
 
-	/*-------------------------------*/
-	/* Met a jour l'interface        */
-	/*-------------------------------*/
 	private void mettreAJourInterface()
 	{
 		if (this.frame == null) return;
 
-		// Met a jour les labels
 		this.labelManche.setText("Manche " + this.mancheCourante + " / " + NB_MANCHES);
 
-		String nomJoueur = "";
-		if (this.joueurCourantIdx < this.nomsJoueurs.size())
-		{
-			nomJoueur = this.nomsJoueurs.get(this.joueurCourantIdx);
-		}
-		else
-		{
-			nomJoueur = "—";
-		}
+		String nomJoueur = (this.joueurCourantIdx < this.nomsJoueurs.size()) ? this.nomsJoueurs.get(this.joueurCourantIdx) : "—";
 		this.labelJoueur.setText("Agent: " + nomJoueur);
+		this.labelJoueur.setForeground(COULEURS_JOUEURS[Math.min(this.joueurCourantIdx, COULEURS_JOUEURS.length - 1)]);
 
-		int couleurIndex = Math.min(this.joueurCourantIdx, COULEURS_JOUEURS.length - 1);
-		this.labelJoueur.setForeground(COULEURS_JOUEURS[couleurIndex]);
+		String nomCarte = this.carteActiveEstJoker ? "🎴 JOKER" : this.carteActive;
+		this.labelCarteActive.setText("Carte: " + (this.carteActive.isEmpty() ? "AUCUNE" : nomCarte));
 
-		String nomCarte = "AUCUNE";
-		if (!this.carteActive.isEmpty())
-		{
-			if (this.carteActiveEstJoker)
-			{
-				nomCarte = "🎴 JOKER !";
-			}
-			else
-			{
-				nomCarte = this.carteActive;
-			}
-		}
-		this.labelCarteActive.setText("🎴 Carte: " + nomCarte);
-
-		// Met a jour l'affichage des cartes piochées
+		// Cartes
 		this.panneauCartes.removeAll();
-
 		for (String carte : this.cartesRetournees)
 		{
 			Image img = this.getImageParCarte(carte);
-			JLabel carteLabel = new JLabel();
-
+			JLabel label = new JLabel();
 			if (img != null)
 			{
-				// Redimensionne l'image pour qu'elle tienne bien
 				Image imgRedim = img.getScaledInstance(50, 60, Image.SCALE_SMOOTH);
-				carteLabel.setIcon(new ImageIcon(imgRedim));
-				carteLabel.setHorizontalAlignment(JLabel.CENTER);
+				label.setIcon(new ImageIcon(imgRedim));
 			}
 			else
 			{
-				// Fallback si l'image n'existe pas
-				carteLabel.setOpaque(true);
-				carteLabel.setBackground(new Color(100, 100, 100));
-				carteLabel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
-				carteLabel.setPreferredSize(new Dimension(50, 60));
-				carteLabel.setHorizontalAlignment(JLabel.CENTER);
-				carteLabel.setForeground(Color.WHITE);
-				carteLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-
-				if (carte.equals("JOKER"))
-				{
-					carteLabel.setText("🎴");
-				}
-				else
-				{
-					carteLabel.setText(carte.substring(0, 1));
-				}
+				label.setOpaque(true);
+				label.setBackground(Color.GRAY);
+				label.setPreferredSize(new Dimension(50, 60));
+				label.setHorizontalAlignment(JLabel.CENTER);
+				label.setForeground(Color.WHITE);
+				label.setText(carte.equals("JOKER") ? "🎴" : carte.substring(0,1));
 			}
-
-			carteLabel.setToolTipText(carte);
-			this.panneauCartes.add(carteLabel);
+			label.setToolTipText(carte);
+			this.panneauCartes.add(label);
 		}
-
 		this.panneauCartes.revalidate();
 		this.panneauCartes.repaint();
 
-		// Met a jour les scores
+		// Scores
 		String texteScores = "";
 		for (int i = 0; i < this.nomsJoueurs.size(); i++)
 		{
@@ -934,69 +723,55 @@ public class ControleurJeu
 		}
 		this.zoneScores.setText(texteScores);
 
-		// Met a jour les zones visitees
-		if (this.joueurCourantIdx < this.zonesVisitesParJoueur.size())
+		// Blocs
+		if (this.joueurCourantIdx < this.blocsVisitesParJoueur.size())
 		{
-			Set<String> zones = this.zonesVisitesParJoueur.get(this.joueurCourantIdx);
-			String texteZones = "Agent courant:\n";
-			if (zones.isEmpty())
+			Set<String> blocs = this.blocsVisitesParJoueur.get(this.joueurCourantIdx);
+			String texteBlocs = "Agent courant:\n";
+			if (blocs.isEmpty())
 			{
-				texteZones = texteZones + "  Aucune zone visitée\n";
+				texteBlocs = texteBlocs + "  Aucun bloc\n";
 			}
 			else
 			{
-				for (String z : zones)
-				{
-					texteZones = texteZones + "  X " + z + "\n";
-				}
+				for (String b : blocs) texteBlocs = texteBlocs + "  ✓ " + b + "\n";
 			}
-			texteZones = texteZones + "\nObjectif: visiter les 5 zones !";
-			this.zoneZonesVisites.setText(texteZones);
+			texteBlocs = texteBlocs + "\nObjectif: OUEST, EST, NON_ALIGNE, CHINOIS";
+			this.zoneBlocsVisites.setText(texteBlocs);
 		}
 
-		// Redessine le plateau
 		this.panneauPlateau.repaint();
 	}
 
-	
-	// Affiche un message dans la  barre d'etat
 	private void afficherMessage(String msg)
 	{
-		if (this.labelMessage != null)
-		{
-			this.labelMessage.setText(msg);
-		}
+		if (this.labelMessage != null) this.labelMessage.setText(msg);
 		System.out.println(msg);
 	}
 
 	/*-------------------------------*/
-	/* Panneau de dessin du plateau  */
+	/* Panneau de dessin             */
 	/*-------------------------------*/
 	private class PanneauPlateau extends JPanel
 	{
-		private final int RAYON = 25;
-		private final int SEUIL = 30;
+		private final int RAYON = 25, SEUIL = 30;
 
 		public PanneauPlateau()
 		{
 			this.setBackground(new Color(30, 30, 40));
-
-			MouseAdapter monEcouteur = new MouseAdapter()
+			this.addMouseListener(new MouseAdapter()
 			{
 				public void mouseClicked(MouseEvent e)
 				{
 					gererClic(e.getX(), e.getY());
 				}
-			};
-
-			this.addMouseListener(monEcouteur);
+			});
 		}
 
 		private void gererClic(int mx, int my)
 		{
 			if (partieTerminee) return;
 
-			// Trouver le sommet clique
 			int idClique = -1;
 			double distMin = Double.MAX_VALUE;
 
@@ -1005,7 +780,7 @@ public class ControleurJeu
 				double dist = Math.hypot(s.getX() - mx, s.getY() - my);
 				if (dist < SEUIL && dist < distMin)
 				{
-					distMin = dist;
+					distMin  = dist;
 					idClique = s.getId();
 				}
 			}
@@ -1015,13 +790,13 @@ public class ControleurJeu
 			if (sommetSelectionne == -1)
 			{
 				sommetSelectionne = idClique;
-				afficherMessage("Station " + idClique + " sélectionnée");
+				String bloc = blocParId[idClique];
+				afficherMessage("Station " + idClique + " (" + bloc + ")");
 				repaint();
 			}
 			else
 			{
-				int src = sommetSelectionne;
-				int cible = idClique;
+				int src = sommetSelectionne, cible = idClique;
 				sommetSelectionne = -1;
 				tenterTracerRoute(src, cible);
 			}
@@ -1033,7 +808,6 @@ public class ControleurJeu
 			Graphics2D g2 = (Graphics2D) g;
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-			// Dessine le fond
 			if (fondImage != null)
 			{
 				g2.drawImage(fondImage, 0, 0, getWidth(), getHeight(), this);
@@ -1044,72 +818,59 @@ public class ControleurJeu
 				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
 
-			// Dessine toutes les aretes possibles 
-			g2.setColor(new Color(200, 180, 100)); 
+			// Aretes possibles
+			g2.setColor(new Color(200, 180, 100));
 			g2.setStroke(new BasicStroke(2f));
 			for (Arete a : plateau.getAretes())
 			{
 				Sommet s1 = plateau.trouverSommet(a.getSrc());
 				Sommet s2 = plateau.trouverSommet(a.getCible());
-				if (s1 != null && s2 != null)
-				{
-					g2.drawLine(s1.getX(), s1.getY(), s2.getX(), s2.getY());
-				}
+				if (s1 != null && s2 != null) g2.drawLine(s1.getX(), s1.getY(), s2.getX(), s2.getY());
 			}
 
-			// Dessine les chemins des joueurs
+			// Chemins
 			for (int i = 0; i < cheminsParJoueur.size(); i++)
 			{
-				int couleurIndex = Math.min(i, COULEURS_JOUEURS.length - 1);
-				Color couleur = COULEURS_JOUEURS[couleurIndex];
-
+				Color couleur = COULEURS_JOUEURS[Math.min(i, COULEURS_JOUEURS.length - 1)];
 				g2.setColor(couleur);
 				g2.setStroke(new BasicStroke(6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-
 				for (Arete a : cheminsParJoueur.get(i))
 				{
 					Sommet s1 = plateau.trouverSommet(a.getSrc());
 					Sommet s2 = plateau.trouverSommet(a.getCible());
-					if (s1 != null && s2 != null)
-					{
-						g2.drawLine(s1.getX(), s1.getY(), s2.getX(), s2.getY());
-					}
+					if (s1 != null && s2 != null) g2.drawLine(s1.getX(), s1.getY(), s2.getX(), s2.getY());
 				}
 			}
 
-			// Dessine les sommets
+	
+			// Sommets
 			for (Sommet s : plateau.getSommets())
 			{
-				Color couleur = Sommet.getCouleurParType(s.getTypeZone());
+				int id = s.getId();
+	
+				// Récupère le type de zone 
+				String typeZone = ControleurJeu.this.zoneParId[id];
+				if (typeZone == null) typeZone = "HOPITAL";  // Valeur par défaut
+				Color couleur = Sommet.getCouleurParType(typeZone);
 
-			
-				if (s.getId() == sommetSelectionne)
+				if (id == sommetSelectionne)
 				{
 					g2.setColor(new Color(255, 255, 150, 100));
-					g2.fillOval(s.getX() - RAYON - 5, s.getY() - RAYON - 5,
-							   (RAYON + 5) * 2, (RAYON + 5) * 2);
+					g2.fillOval(s.getX() - RAYON - 5, s.getY() - RAYON - 5, (RAYON + 5) * 2, (RAYON + 5) * 2);
 				}
 
-				// Cercle interieur
 				g2.setColor(couleur);
 				g2.fillOval(s.getX() - RAYON, s.getY() - RAYON, RAYON * 2, RAYON * 2);
 
-				// Lettre au centre
 				g2.setColor(Color.WHITE);
 				g2.setFont(new Font("Arial", Font.BOLD, 14));
 				String lettre = s.getPremiereLettre();
 				int textX = s.getX() - g2.getFontMetrics().stringWidth(lettre) / 2;
 				g2.drawString(lettre, textX, s.getY() + 6);
 
-				// Contour blanc
 				g2.setColor(new Color(255, 255, 255, 80));
 				g2.setStroke(new BasicStroke(1.5f));
 				g2.drawOval(s.getX() - RAYON, s.getY() - RAYON, RAYON * 2, RAYON * 2);
-
-				// Petit texte avec l'id
-				g2.setColor(new Color(200, 200, 200, 150));
-				g2.setFont(new Font("SansSerif", Font.PLAIN, 9));
-				g2.drawString(String.valueOf(s.getId()), s.getX() - 4, s.getY() - RAYON - 3);
 			}
 		}
 	}

@@ -1,5 +1,7 @@
 package commun;
 
+import java.awt.*;
+
 public class Sommet
 {
 	private int id;
@@ -87,7 +89,7 @@ public class Sommet
 	/* Couleur selon le type de zone */
 	/*-------------------------------*/
 
-	public static java.awt.Color getCouleurParType(String type)
+	public static Color getCouleurParType(String type)
 	{
 		if (type.equals("HOPITAL"  ))   return new java.awt.Color(220, 60, 60, 200);
 		if (type.equals("FERME"    ))   return new java.awt.Color(60, 180, 60, 200);
