@@ -91,12 +91,12 @@ public class Sommet
 
 	public static Color getCouleurParType(String type)
 	{
-		if (type.equals("HOPITAL"  ))   return new java.awt.Color(220, 60, 60, 200);
-		if (type.equals("FERME"    ))   return new java.awt.Color(60, 180, 60, 200);
-		if (type.equals("PETROLIER"))   return new java.awt.Color(40, 40, 40, 200);
-		if (type.equals("PORT"     ))   return new java.awt.Color(60, 120, 220, 200);
-		if (type.equals("TANK"     ))   return new java.awt.Color(160, 100, 40, 200);
-		if (type.equals("JOKER"    ))   return new java.awt.Color(200, 200, 60, 200);
+		if (type.equals("HOPITAL"  ))   return new Color(220, 60, 60, 200);
+		if (type.equals("FERME"    ))   return new Color(60, 180, 60, 200);
+		if (type.equals("PETROLIER"))   return new Color(40, 40, 40, 200);
+		if (type.equals("PORT"     ))   return new Color(60, 120, 220, 200);
+		if (type.equals("TANK"     ))   return new Color(160, 100, 40, 200);
+		if (type.equals("JOKER"    ))   return new Color(200, 200, 60, 200);
 		return new Color(100, 100, 100, 200);
 	}
 }
