@@ -1,149 +1,150 @@
 package commun;
 
-import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
 
 public class Graphe
 {
-	private List<Sommet> sommets;
-	private List<Arete>  aretes;
-	private int          largeur;
-	private int          hauteur;
+	public static final int NB_LIGNES   = 7;
+	public static final int NB_COLONNES = 7;
+
+	private ArrayList<Sommet> sommets;
+	private ArrayList<Arete>  aretes;
 
 	/*-------------------------------*/
 	/* Constructeur                  */
 	/*-------------------------------*/
 	public Graphe()
 	{
-		this.sommets = new ArrayList<>();
-		this.aretes  = new ArrayList<>();
-		this.largeur = 800;
-		this.hauteur = 600;
+		this.sommets = new ArrayList<Sommet>();
+		this.aretes  = new ArrayList<Arete>();
 	}
 
-	/*--------------------------------*/
-	/* Gestion des sommets et arêtes  */
-	/*--------------------------------*/
-	public void ajouterSommet(Sommet s)
-	{
-		if (!this.sommets.contains(s)) this.sommets.add(s);
-	}
+	/*-------------------------------*/
+	/* Getters                       */
+	/*-------------------------------*/
+	public ArrayList<Sommet> getSommets() { return this.sommets; }
+	public ArrayList<Arete>  getAretes()  { return this.aretes; }
 
-	public void supprimerSommet(int id)
+	public int getNbLignes()   { return NB_LIGNES; }
+	public int getNbColonnes() { return NB_COLONNES; }
+
+	/*-------------------------------*/
+	/* Recherche de Sommet par lig/col*/
+	/*-------------------------------*/
+	public Sommet getSommet(int ligne, int colonne)
 	{
-		Sommet aSupprimer = null;
-		for (Sommet s : this.sommets)
+		int taille = this.sommets.size();
+		for (int i = 0; i < taille; i++)
 		{
-			if (s.getId() == id)
+			Sommet s = this.sommets.get(i);
+			if (s.getLigne() == ligne && s.getColonne() == colonne)
 			{
-				aSupprimer = s;
-				break;
+				return s;
 			}
-		}
-		if (aSupprimer != null) this.sommets.remove(aSupprimer);
-
-		List<Arete> aretesASupprimer = new ArrayList<>();
-		for (Arete a : this.aretes)
-		{
-			if (a.contient(id)) aretesASupprimer.add(a);
-		}
-		this.aretes.removeAll(aretesASupprimer);
-	}
-
-	public Sommet trouverSommet(int id)
-	{
-		for (Sommet s : this.sommets)
-		{
-			if (s.getId() == id) return s;
 		}
 		return null;
 	}
 
-	public List<Sommet> getSommets()
+	/*-------------------------------*/
+	/* Sécurités de l'éditeur        */
+	/*-------------------------------*/
+	public boolean estCaseAutorisee(int ligne, int colonne)
 	{
-		return new ArrayList<>(this.sommets);
+		// Par défaut dans ton éditeur, toutes les cases de la grille 7x7 sont cliquables
+		return ligne >= 0 && ligne < NB_LIGNES && colonne >= 0 && colonne < NB_COLONNES;
 	}
 
-	public void ajouterArete(Arete a)
+	public String determinerBloc(int ligne, int colonne)
 	{
-		if (!this.aretes.contains(a)) this.aretes.add(a);
-	}
-
-	public void supprimerArete(Arete a)
-	{
-		this.aretes.remove(a);
-	}
-
-	public boolean areteExiste(int id1, int id2)
-	{
-		return this.aretes.contains(new Arete(id1, id2));
-	}
-
-	public List<Arete> getAretes()
-	{
-		return new ArrayList<>(this.aretes);
-	}
-
-	public int getDegre(int id)
-	{
-		int degre = 0;
-		for (Arete a : this.aretes)
-		{
-			if (a.contient(id)) degre++;
-		}
-		return degre;
+		// Attribue un bloc ou une zone par défaut selon la position 
+		if (colonne < 3 && ligne < 3) return "OUEST";
+		if (colonne >= 4 && ligne < 4) return "EST";
+		if (ligne >= 4 && colonne < 3) return "CHINOIS";
+		return "NON-ALIGNE";
 	}
 
 	/*-------------------------------*/
-	/* Chargement depuis un fichier   */
+	/* RECONSTRUCTION DES LIENS      */
 	/*-------------------------------*/
-	public void chargerDepuisFichier(String cheminFichier) throws IOException
+	
+	/**
+	 * Parcourt toute la liste des sommets actuels pour recalculer leurs voisins
+	 * et recréer les arêtes visuelles à afficher sur le plateau.
+	 */
+	public void remonterAretes()
 	{
-		this.sommets.clear();
+		// On vide les anciennes arêtes pour ne pas faire de doublons
 		this.aretes.clear();
-		BufferedReader br = new BufferedReader(new FileReader(cheminFichier));
-		String ligne;
-
-		while ((ligne = br.readLine()) != null)
+		
+		int taille = this.sommets.size();
+		
+		// 1. On vide d'abord la liste des voisins de chaque sommet pour repartir à zéro
+		for (int i = 0; i < taille; i++)
 		{
-			ligne = ligne.trim();
-			if (ligne.startsWith("#") || ligne.isEmpty()) continue;
+			this.sommets.get(i).getVoisins().clear();
+		}
 
-			String[] parts = ligne.split(";");
-			if (parts.length >= 4)
+		// 2. On lance le rayon de recherche pour chaque sommet présent
+		for (int i = 0; i < taille; i++)
+		{
+			Sommet s = this.sommets.get(i);
+			this.chercherVoisins(s.getLigne(), s.getColonne(), s);
+		}
+	}
+
+	
+	private void chercherVoisins(int lig, int col, Sommet sommetCourant)
+	{
+		// Les 8 directions logiques 
+		int[][] directions = {
+			{-1, 0},  // 0 : Haut
+			{1, 0},   // 1 : Bas
+			{0, -1},  // 2 : Gauche
+			{0, 1},   // 3 : Droite
+			{-1, -1}, // 4 : Haut-Gauche
+			{-1, 1},  // 5 : Haut-Droite
+			{1, -1},  // 6 : Bas-Gauche
+			{1, 1}    // 7 : Bas-Droite
+		};
+		
+		int nbDirections = directions.length;
+		
+		for (int i = 0; i < nbDirections; i++)
+		{
+			int dLig = directions[i][0];
+			int dCol = directions[i][1]; 
+			
+			int ligCherche = lig + dLig;
+			int colCherche = col + dCol; 
+			boolean continuer = true; 
+
+			// On pousse le rayon tant qu'on ne sort pas de la grille 7x7
+			while (ligCherche >= 0 && ligCherche < NB_LIGNES &&
+			       colCherche >= 0 && colCherche < NB_COLONNES && continuer)
 			{
-				int id = Integer.parseInt(parts[0]);
-				int x  = Integer.parseInt(parts[1]);
-				int y  = Integer.parseInt(parts[2]);
-				String typeZone = parts[3];
-				this.ajouterSommet(new Sommet(id, x, y, typeZone));
+				Sommet sommetTrouve = this.getSommet(ligCherche, colCherche);
+				
+				if (sommetTrouve != null)
+				{
+					// Ajoute le sommet trouvé dans la collection de liens du sommet courant
+					sommetCourant.ajouterVoisin(sommetTrouve);
+					
+					// Crée l'arête reliant les deux s'il n'existe pas encore
+					Arete nouvelleArete = new Arete(sommetCourant, sommetTrouve);
+					
+					if (!this.aretes.contains(nouvelleArete)) 
+					{
+						this.aretes.add(nouvelleArete);
+					}
+					
+					// On a trouvé le premier sommet visible dans cette ligne de mire, on arrête le rayon
+					continuer = false;
+				}
+				
+				// On avance d'une case de plus dans la même direction
+				ligCherche += dLig;
+				colCherche += dCol;
 			}
 		}
-		br.close();
-	}
-
-	public int getLargeur()
-	{
-		return this.largeur;
-	}
-
-	public void setLargeur(int largeur)
-	{
-		this.largeur = largeur;
-	}
-
-	public int getHauteur()
-	{
-		return this.hauteur;
-	}
-
-	public void setHauteur(int hauteur)
-	{
-		this.hauteur = hauteur;
-	}
-
-	public int getNbSommets()
-	{
-		return this.sommets.size();
 	}
 }

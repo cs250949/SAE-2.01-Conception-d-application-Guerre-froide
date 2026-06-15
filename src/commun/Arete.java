@@ -2,57 +2,57 @@ package commun;
 
 public class Arete
 {
-	private int src;
-	private int cible;
-
+	private Sommet  depart;
+	private Sommet  arrivee;
+	private int     emprunteeParJoueur; 
+	
 	/*-------------------------------*/
 	/* Constructeur                  */
 	/*-------------------------------*/
-	public Arete(int src, int cible)
+	public Arete(Sommet depart, Sommet arrivee)
 	{
-		this.src = src;
-		this.cible = cible;
+		this.depart = depart;
+		this.arrivee = arrivee;
+		this.emprunteeParJoueur = 0; 
 	}
-
-	public int getSrc()
-	{
-		return this.src;
-	}
-
-	public int getCible()
-	{
-		return this.cible;
-	}
-
+	
 	/*-------------------------------*/
-	/* Vérifie si un sommet est dans */
-	/* l'arête                       */
+	/* Getters et Setters            */
 	/*-------------------------------*/
-	public boolean contient(int id)
-	{
-		return (this.src == id || this.cible == id);
+	public Sommet getDepart()  { return this.depart; }
+	public Sommet getArrivee() { return this.arrivee; }
+	
+	public boolean isEmprunteeParJoueur() 
+	{ 
+		return this.emprunteeParJoueur == 1; 
 	}
-
-	public int getAutre(int id)
-	{
-		if (this.src == id) return this.cible;
-		if (this.cible == id) return this.src;
-		return -1;
+	
+	public void setEmprunteeParJoueur(int valeur) 
+	{ 
+		this.emprunteeParJoueur = valeur; 
 	}
-
-
+	
 	/*-------------------------------*/
-	/* Bidirectionnel pour éviter    */
-	/* les doublons                  */
+	/* Vérifications                 */
 	/*-------------------------------*/
+	public boolean contient(Sommet s)
+	{
+		return this.depart == s || this.arrivee == s;
+	}
+	
+	public Sommet getAutre(Sommet s)
+	{
+		if (this.depart == s)  return this.arrivee;
+		if (this.arrivee == s) return this.depart;
+		return null;
+	}
+	
 	public boolean equals(Object obj)
 	{
 		if (this == obj) return true;
-		if (obj == null) return false;
-		if (this.getClass() != obj.getClass()) return false;
-
+		if (obj == null || getClass() != obj.getClass()) return false;
 		Arete autre = (Arete) obj;
-		return (this.src == autre.src && this.cible == autre.cible) ||
-			   (this.src == autre.cible && this.cible == autre.src);
+		return (this.depart == autre.depart && this.arrivee == autre.arrivee) ||
+		       (this.depart == autre.arrivee && this.arrivee == autre.depart);
 	}
 }

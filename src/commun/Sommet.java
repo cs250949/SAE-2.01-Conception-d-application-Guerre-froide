@@ -1,102 +1,82 @@
 package commun;
 
-import java.awt.*;
+import java.util.ArrayList;
 
 public class Sommet
 {
-	private int id;
-	private int x;
-	private int y;
-	private String typeZone;
-
+	private int               ligne;
+	private int               colonne;
+	private String            type;
+	private String            bloc;
+	private int               visite;
+	private ArrayList<Sommet> voisins;
+	
 	/*-------------------------------*/
 	/* Constructeur                  */
 	/*-------------------------------*/
-
-	public Sommet(int id, int x, int y, String typeZone)
+	public Sommet(int ligne, int colonne, String type, String bloc)
 	{
-		this.id = id;
-		this.x  = x;
-		this.y  = y;
-		this.typeZone = typeZone;
+		this.ligne   = ligne;
+		this.colonne = colonne;
+		this.type    = type;
+		this.bloc    = bloc;
+		this.visite  = 0; // 0 signifie "false"
+		this.voisins = new ArrayList<Sommet>();
 	}
-
-	public int getId()
-	{
-		return this.id;
-	}
-
-	public void setId(int id)
-	{
-		this.id = id;
-	}
-
-	public int getX()
-	{
-		return this.x;
-	}
-
-	public void setX(int x)
-	{
-		this.x = x;
-	}
-
-	public int getY()
-	{
-		return this.y;
-	}
-
-	public void setY(int y)
-	{
-		this.y = y;
-	}
-
-	public String getTypeZone()
-	{
-		return this.typeZone;
-	}
-
-	public void setTypeZone(String typeZone)
-	{
-		this.typeZone = typeZone;
-	}
-
-	/*-------------------------------------------*/
-	/* Vérifie si un point est proche du sommet */
-	/*-------------------------------------------*/
-	public boolean contientPoint(int px, int py)
-	{
-		int dx = px - this.x;
-		int dy = py - this.y;
-		return (dx * dx + dy * dy) <= 400;
-	}
-
-	/*---------------------------------*/
-	/* Première lettre du type de zone */
-	/*---------------------------------*/
-	public String getPremiereLettre()
-	{
-		if (this.typeZone == null) return "?";
-		if (this.typeZone.equals("HOPITAL"))   return "H";
-		if (this.typeZone.equals("FERME"))     return "F";
-		if (this.typeZone.equals("PETROLIER")) return "P";
-		if (this.typeZone.equals("PORT"))      return "Po";
-		if (this.typeZone.equals("TANK"))      return "T";
-		return this.typeZone.substring(0, 1);
-	}
-
+	
 	/*-------------------------------*/
-	/* Couleur selon le type de zone */
+	/* Getters                       */
 	/*-------------------------------*/
+	public int getLigne()   { return this.ligne;   }
+	public int getColonne() { return this.colonne; }
+	public String getType() { return this.type;    } 
+	public String getBloc() { return this.bloc;    }
+	
+	// Alias commode pour correspondre à l'appel s.getZone() fait dans PanneauPlateau
+	public String getZone() { return this.bloc;    }
+	
+	public boolean isVisite() { 
+		return this.visite == 1; 
+	}
+	
+	public ArrayList<Sommet> getVoisins() { 
+		return this.voisins; 
+	}
 
-	public static Color getCouleurParType(String type)
+	/*------------------------------- */
+	/* Setters                        */
+	/*------------------------------- */
+	public void setLigne   (int ligne)   { this.ligne = ligne;     }
+	public void setColonne (int colonne) { this.colonne = colonne; }
+	public void setType    (String type) { this.type = type;       }
+	public void setBloc    (String bloc) { this.bloc = bloc;       }
+	
+	public void setVisite(boolean visite) { 
+		this.visite = visite ? 1 : 0; 
+	}
+	
+	/*---------------------------------*/
+	/* Gestion des liens de voisinage  */
+	/*---------------------------------*/
+	public void ajouterVoisin(Sommet s)
 	{
-		if (type.equals("HOPITAL"  ))   return new java.awt.Color(220, 60, 60, 200);
-		if (type.equals("FERME"    ))   return new java.awt.Color(60, 180, 60, 200);
-		if (type.equals("PETROLIER"))   return new java.awt.Color(40, 40, 40, 200);
-		if (type.equals("PORT"     ))   return new java.awt.Color(60, 120, 220, 200);
-		if (type.equals("TANK"     ))   return new java.awt.Color(160, 100, 40, 200);
-		if (type.equals("JOKER"    ))   return new java.awt.Color(200, 200, 60, 200);
-		return new java.awt.Color(100, 100, 100, 200);
+		if (s != null && !this.voisins.contains(s))
+		{
+			this.voisins.add(s);
+		}
+	}
+	
+	/*-------------------------------*/
+	/* Vérifications                 */
+	/*-------------------------------*/
+	public boolean estVide()
+	{
+		if (this.type == null) return true;
+		return this.type.equals("VIDE");
+	}
+	
+	public String toString()
+	{
+		return this.ligne + ";" + this.colonne + ";" + this.type + ";" + this.bloc;
 	}
 }
