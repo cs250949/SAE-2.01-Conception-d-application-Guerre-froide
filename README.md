@@ -27,9 +27,9 @@ cd SAE-2.01-Conception-d-application-Guerre-froide
 
 ## Compilation
 ```bash
-javac commun/*.java conception/controleur/*.java jeu/controleur/*.java
+javac "@compile.txt"
 ```
 ## Lancement du jeu 
 ```bash
-java conception.controleur.ControleurConception
+java conception.vue.fenetreConception
 ```
