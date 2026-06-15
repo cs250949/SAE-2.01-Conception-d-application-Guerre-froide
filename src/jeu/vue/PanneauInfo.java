@@ -120,13 +120,13 @@ public class PanneauInfo extends JPanel
 
 		btnPiocher.addActionListener(e -> {
 			if (estModeDemo) {
-				// Liste de vos formes/cartes d'objectifs (triangle, rond, croix, carre)
+				
 				String[] poolCartes = {"Triangle", "Rond", "Croix", "Carre"};
 				int randomIdx = (int)(Math.random() * poolCartes.length);
 				String cartePiochee = poolCartes[randomIdx];
 				
 				try {
-					// Charge l'image depuis le dossier images/ de votre projet
+					// Charge l'image depuis le dossier images
 					ImageIcon originalIcon = new ImageIcon("images/" + cartePiochee.toLowerCase() + ".png");
 					Image imgRedimensionnee = originalIcon.getImage().getScaledInstance(120, 140, Image.SCALE_SMOOTH);
 					lblCarteActive.setIcon(new ImageIcon(imgRedimensionnee));
