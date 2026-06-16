@@ -1,35 +1,40 @@
 package conception.controleur;
 
 import commun.Graphe;
+import commun.Sommet;
 import conception.vue.BarreStatut;
 import conception.vue.PanneauGrille;
+import java.io.IOException;
 import javax.swing.*;
 
 public class ControleurConception
 {
+	private static final String CHEMIN_PLATEAU = "plateau.txt";
+
 	private PanneauGrille panneauGrille;
 	private BarreStatut   barreStatut;
 	private Graphe        graphe;
 	private String        typeCourant    = "HOPITAL";
 	private int           nbZonesActives = 4;
 
-	/**
-	 * Constructeur principal appelé par FenetreConception 
-	 */
+	public ControleurConception()
+	{
+		this(7, 7, 4, 4);
+	}
+
 	public ControleurConception(int largeur, int hauteur, int nbCouleur, int nbZone)
 	{
 		this.nbZonesActives = nbZone;
-		this.graphe         = new Graphe(hauteur, largeur);
+		// Utilisation du constructeur par défaut nettoyé en entiers
+		this.graphe         = new Graphe();
+		chargerPlateau();
 	}
 
 	public void setVues(PanneauGrille grille, BarreStatut statut)
 	{
 		this.panneauGrille = grille;
 		this.barreStatut   = statut;
-		if (this.panneauGrille != null)
-		{
-			this.panneauGrille.setGraphe(this.graphe);
-		}
+		this.panneauGrille.setGraphe(this.graphe);
 	}
 
 	public void setTypeCourant(String type)
@@ -37,56 +42,131 @@ public class ControleurConception
 		this.typeCourant = type;
 	}
 
-	public void CelluleCliquee(int lig, int col)
+	public void setNbZonesActives(int nb)
 	{
-		if (this.graphe != null)
-		{
-			this.graphe.designerSommet(lig, col, this.typeCourant);
-			if (this.panneauGrille != null)
-			{
-				this.panneauGrille.mettreAJourIcons();
-			}
-		}
-	}
-
-	/**
-	 * Appelée par l'action du bouton Générer du formulaire
-	 */
-	public void redimensionnerPlateau(int hauteur, int largeur)
-	{
-		this.graphe = new Graphe(hauteur, largeur);
-		if (this.panneauGrille != null)
-		{
-			this.panneauGrille.setGraphe(this.graphe);
-		}
-		setMessage("Plateau généré : " + largeur + " × " + hauteur);
+		this.nbZonesActives = nb;
+		if (panneauGrille != null)
+			panneauGrille.mettreAJourIcons();
 	}
 
 	public void setMessage(String msg)
 	{
-		if (this.barreStatut != null)
+		if (barreStatut != null)
+			barreStatut.setMessage(msg);
+	}
+
+	public void CelluleCliquee(int ligne, int colonne)
+	{
+		if (!graphe.estCaseAutorisee(ligne, colonne))
 		{
-			this.barreStatut.setMessage(msg);
+			setMessage("Cette zone n'est pas active !");
+			return;
 		}
+
+		Sommet s = graphe.getSommet(ligne, colonne);
+		
+		// Si le sommet n'existe pas encore au clic dans l'éditeur, on le crée à la volée
+		if (s == null)
+		{
+			String blocParDefaut = graphe.determinerBloc(ligne, colonne);
+			s = new Sommet(ligne, colonne, typeCourant, blocParDefaut);
+			graphe.getSommets().add(s);
+		}
+		else
+		{
+			s.setType(typeCourant);
+		}
+		
+		panneauGrille.mettreAJourIcons();
+		setMessage("Cellule [" + ligne + ", " + colonne + "] → " + typeCourant + " / Faction : " + s.getBloc());
+	}
+
+	public void CelluleSurvolee(int ligne, int colonne)
+	{
+		if (barreStatut != null)
+			barreStatut.setPosition(ligne, colonne);
+	}
+
+	public void chargerPlateau()
+	{
+		
+		if (this.graphe == null)
+		{
+			this.graphe = new Graphe();
+		}
+		
+		if (panneauGrille != null)
+			panneauGrille.setGraphe(graphe);
+		setMessage("Génération d'un plateau vierge par défaut.");
+	}
+
+	public void sauvegarderPlateau()
+	{
+		setMessage("Configuration enregistrée localement.");
 	}
 
 	public void reinitialiser()
 	{
-		if (this.graphe != null)
-		{
-			redimensionnerPlateau(this.graphe.getNbLignes(), this.graphe.getNbColonnes());
-		}
+		this.graphe = new Graphe();
+		if (panneauGrille != null)
+			panneauGrille.setGraphe(graphe);
+		setMessage("Grille effacée.");
 	}
 
-	public void reinitialiserChamps() { reinitialiser(); }
-	public void sauvegarderPlateau() { setMessage("Configuration enregistrée."); }
-	public void chargerPlateau()     { setMessage("Configuration chargée."); }
-	public void lancerJeu()          { setMessage("Lancement du jeu..."); }
-	public void validerEtLancer()    { lancerJeu(); }
-	public void quitter()            { System.exit(0); }
+	public void redimensionnerPlateau(int hauteur, int largeur)
+	{
+		this.graphe = new Graphe();
+		if (panneauGrille != null)
+			panneauGrille.setGraphe(graphe);
+		setMessage("Plateau rafraîchi : " + largeur + " × " + hauteur);
+	}
 
 	public void afficherRegles()
 	{
-		JOptionPane.showMessageDialog(null, "Ajustez les dimensions puis cliquez sur Générer.", "Aide", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(
+			null,
+			"Opération Réseau Rouge\n\n" +
+			"1. Choisissez un type d'infrastructure dans la liste.\n" +
+			"2. Les zones géographiques gardent leurs couleurs d'origine.\n" +
+			"3. Cliquez sur une case pour l'affecter.\n" +
+			"4. Sauvegardez puis lancez le jeu.",
+			"Règles — Éditeur de plateau",
+			JOptionPane.INFORMATION_MESSAGE
+		);
+	}
+
+	public void reinitialiserChamps()
+	{
+		reinitialiser();
+	}
+
+	public void validerEtLancer()
+	{
+		lancerJeu();
+	}
+
+	public void quitter()
+	{
+		System.exit(0);
+	}
+
+	public void lancerJeu()
+	{
+		// Calcule et relie les sommets par rayons avant d'ouvrir la fenêtre 
+		if (this.graphe != null)
+		{
+			this.graphe.remonterAretes();
+		}
+
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				new jeu.vue.FenetreJeu(ControleurConception.this.graphe);
+			}
+		});
+	}
+
+	public Graphe getGraphe()
+	{
+		return graphe;
 	}
 }
