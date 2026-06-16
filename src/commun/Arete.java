@@ -13,7 +13,7 @@ public class Arete
 	{
 		this.depart = depart;
 		this.arrivee = arrivee;
-		this.emprunteeParJoueur = 0; 
+		this.emprunteeParJoueur = 0;
 	}
 	
 	/*-------------------------------*/
@@ -22,8 +22,7 @@ public class Arete
 	public Sommet getDepart()  { return this.depart; }
 	public Sommet getArrivee() { return this.arrivee; }
 	
-	public boolean isEmprunteeParJoueur() 
-	{ 
+	public boolean isEmprunteeParJoueur() { 
 		return this.emprunteeParJoueur == 1; 
 	}
 	
