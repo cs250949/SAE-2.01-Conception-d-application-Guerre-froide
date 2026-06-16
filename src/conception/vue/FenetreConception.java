@@ -13,7 +13,7 @@ public class FenetreConception extends JFrame
 
 	public FenetreConception()
 	{
-		super("Opération Réseau Rouge — Éditeur de plateau");
+		super("Éditeur de plateau");
 
 		this.controleur = new ControleurConception(7, 7, 4, 4);
 
