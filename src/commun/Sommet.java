@@ -8,7 +8,10 @@ public class Sommet
 	private int               colonne;
 	private String            type;
 	private String            bloc;
+	
+	
 	private int               visite;
+	
 	private ArrayList<Sommet> voisins;
 	
 	/*-------------------------------*/
@@ -20,12 +23,12 @@ public class Sommet
 		this.colonne = colonne;
 		this.type    = type;
 		this.bloc    = bloc;
-		this.visite  = 0; // 0 signifie "false"
+		this.visite  = 0; 
 		this.voisins = new ArrayList<Sommet>();
 	}
 	
 	/*-------------------------------*/
-	/* Getters                       */
+	/* Getters            */
 	/*-------------------------------*/
 	public int getLigne()   { return this.ligne;   }
 	public int getColonne() { return this.colonne; }
