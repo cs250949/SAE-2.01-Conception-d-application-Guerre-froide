@@ -30,7 +30,7 @@ public class PanneauPlateau extends JPanel
 		this.listener = listener;
 		this.cacheImages = new HashMap<String, ImageIcon>();
 		
-		// Chargement sécurisé des icônes
+		
 		chargerImagesInfrastructures();
 
 		int nbLignes = Graphe.NB_LIGNES;
@@ -92,7 +92,6 @@ public class PanneauPlateau extends JPanel
 				
 				if (imgUrl != null) {
 					ImageIcon iconOriginal = new ImageIcon(imgUrl);
-					// valeur entière brute 4 
 					Image imgRedimensionnee = iconOriginal.getImage().getScaledInstance(35, 35, 4);
 					cacheImages.put(type, new ImageIcon(imgRedimensionnee));
 				}
@@ -123,7 +122,7 @@ public class PanneauPlateau extends JPanel
 				
 				if (a.isEmprunteeParJoueur()) 
 				{
-					g2.setColor(new Color(255, 75, 75, 240)); 
+					g2.setColor(new Color(255, 75, 75, 240));
 					g2.setStroke(new BasicStroke(3.0f));       
 				}
 				else
@@ -139,10 +138,10 @@ public class PanneauPlateau extends JPanel
 
 	protected void paintChildren(Graphics g)
 	{
-		// 1. Dessine d'abord les boutons d'infrastructure
+		// Dessine d'abord les boutons d'infrastructure
 		super.paintChildren(g);
 		
-		// 2. Force le dessin des lignes du graphe au premier plan par-dessus les boutons
+		// Force le dessin des lignes du graphe au premier plan par-dessus les boutons
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
