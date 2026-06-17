@@ -6,16 +6,22 @@ import javax.swing.*;
 
 public class FenetreConception extends JFrame
 {
+	/*----------------------------*/
+	/* Attributs                  */
+	/*----------------------------*/
 	private ControleurConception controleur;
 	private PanneauGrille        panneauGrille;
 	private PanneauFormulaire    panneauFormulaire;
 	private BarreStatut          barreStatut;
 
-	public FenetreConception()
+	/*----------------------------*/
+	/* Constructeur               */
+	/*----------------------------*/
+	public FenetreConception(ControleurConception controleur)
 	{
 		super("Éditeur de plateau");
 
-		this.controleur = new ControleurConception(7, 7, 4, 4);
+		this.controleur = controleur;
 
 		construireInterface();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -25,6 +31,9 @@ public class FenetreConception extends JFrame
 		setVisible(true);
 	}
 
+	/*----------------------------*/
+	/* Construction interface     */
+	/*----------------------------*/
 	private void construireInterface()
 	{
 		setLayout(new BorderLayout());
@@ -41,14 +50,14 @@ public class FenetreConception extends JFrame
 
 		panneauGrille = new PanneauGrille(controleur, new PanneauGrille.CelluleListener()
 		{
-			
+			@Override
 			public void CelluleCliquee(int ligne, int colonne)
 			{
 				controleur.CelluleCliquee(ligne, colonne);
 				panneauGrille.mettreAJourIcons();
 			}
 
-			
+			@Override
 			public void CelluleSurvolee(int ligne, int colonne)
 			{
 				controleur.CelluleSurvolee(ligne, colonne);
@@ -72,9 +81,12 @@ public class FenetreConception extends JFrame
 		controleur.setVues(panneauGrille, barreStatut);
 	}
 
+	/*----------------------------*/
+	/* Barre de menu              */
+	/*----------------------------*/
 	private JMenuBar creerMenuBar()
 	{
-		JMenuBar mb               = new JMenuBar();
+		JMenuBar mb = new JMenuBar();
 
 		JMenu menuFichier         = new JMenu("Fichier");
 		JMenuItem miSauvegarder   = new JMenuItem("Sauvegarder");
@@ -101,10 +113,5 @@ public class FenetreConception extends JFrame
 		mb.add(menuFichier);
 		mb.add(menuJeu);
 		return mb;
-	}
-
-	public static void main(String[] args)
-	{
-	    FenetreConception f = new FenetreConception();
 	}
 }

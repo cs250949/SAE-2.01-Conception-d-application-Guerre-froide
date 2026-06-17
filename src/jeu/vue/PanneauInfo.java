@@ -1,193 +1,160 @@
 package jeu.vue;
 
+import jeu.controleur.ControleurJeu;
+
 import java.awt.*;
 import javax.swing.*;
-import jeu.controleur.ControleurJeu;
 
 public class PanneauInfo extends JPanel
 {
+	/*----------------------------*/
+	/* Constantes                 */
+	/*----------------------------*/
+	private static final Color COULEUR_FOND    = new Color(40, 44, 52);
+	private static final Color COULEUR_TEXTE   = new Color(200, 220, 255);
+
+	/*----------------------------*/
+	/* Attributs                  */
+	/*----------------------------*/
 	private ControleurJeu controleur;
-	
+
 	private JLabel        lblManche;
-	private JLabel        lblCarteActive;
+	private JLabel        lblJoueur;
+	private JLabel        lblCarte;
 	private JTextArea     txtScores;
-	
-	private JButton       btnPiocher;
-	private JButton       btnPasser;
+	private JLabel        lblPosition;
 
-	private JPanel        pnlSwitchAgents;
-	private JButton       btnAgentAlpha;
-	private JButton       btnAgentBravo;
-	private JButton       btnAgentCharlie;
-	private JButton       btnAgentDelta;
-
-	private boolean       estModeDemo;
-
-	public PanneauInfo(ControleurJeu controleur, boolean estModeDemo)
+	/*----------------------------*/
+	/* Constructeur               */
+	/*----------------------------*/
+	public PanneauInfo(ControleurJeu controleur)
 	{
 		this.controleur = controleur;
-		this.estModeDemo = estModeDemo;
-		
+
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		this.setPreferredSize(new Dimension(280, 750));
+		this.setPreferredSize(new Dimension(260, 350));
+		this.setMaximumSize(new Dimension(260, 400));
+		this.setBackground(COULEUR_FOND);
 		this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		/*-------------------------------------------------*/
-		/* Statut Global                                   */
-		/*-------------------------------------------------*/
-		JPanel pnlStatut = new JPanel(new BorderLayout());
-		pnlStatut.setBorder(BorderFactory.createTitledBorder(" Statut Global "));
-		
-		lblManche = new JLabel("Manche : 1 / 4", JLabel.CENTER);
-		lblManche.setFont(new Font("Arial", Font.BOLD, 12));
-		
-		lblCarteActive = new JLabel("Pas de carte", JLabel.CENTER);
-		lblCarteActive.setHorizontalTextPosition(JLabel.CENTER);
-		lblCarteActive.setVerticalTextPosition(JLabel.BOTTOM);
-		lblCarteActive.setFont(new Font("Arial", Font.ITALIC, 12));
-		
-		pnlStatut.add(lblManche, BorderLayout.NORTH);
-		pnlStatut.add(lblCarteActive, BorderLayout.CENTER);
-		
-		this.add(pnlStatut);
+		/* Titre */
+		JLabel lblTitre = new JLabel("INFORMATIONS", SwingConstants.CENTER);
+		lblTitre.setFont(new Font("Arial", Font.BOLD, 14));
+		lblTitre.setForeground(Color.WHITE);
+		lblTitre.setAlignmentX(Component.CENTER_ALIGNMENT);
+		this.add(lblTitre);
+
 		this.add(Box.createVerticalStrut(10));
 
-		/*-------------------------------------------------*/
-		/* Scores en Temps Réel                            */
-		/*-------------------------------------------------*/
-		JPanel pnlScores = new JPanel(new BorderLayout());
-		pnlScores.setBorder(BorderFactory.createTitledBorder(" Scores en Temps Réel "));
-		txtScores = new JTextArea(5, 20);
-		txtScores.setEditable(false);
-		txtScores.setBackground(new Color(240, 240, 240)); 
-		txtScores.setForeground(new Color(30, 30, 30));     
-		txtScores.setFont(new Font("Monospaced", Font.BOLD, 12));
-		pnlScores.add(new JScrollPane(txtScores), BorderLayout.CENTER);
-		this.add(pnlScores);
+		/* Manche */
+		this.lblManche = new JLabel("Manche : 1 / 4");
+		this.lblManche.setFont(new Font("Arial", Font.BOLD, 12));
+		this.lblManche.setForeground(COULEUR_TEXTE);
+		this.lblManche.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.add(this.lblManche);
+
+		this.add(Box.createVerticalStrut(5));
+
+		/* Joueur courant */
+		this.lblJoueur = new JLabel("Joueur : ???");
+		this.lblJoueur.setFont(new Font("Arial", Font.BOLD, 12));
+		this.lblJoueur.setForeground(new Color(255, 200, 100));
+		this.lblJoueur.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.add(this.lblJoueur);
+
+		this.add(Box.createVerticalStrut(5));
+
+		/* Carte active */
+		this.lblCarte = new JLabel("Carte : Aucune");
+		this.lblCarte.setFont(new Font("Arial", Font.ITALIC, 12));
+		this.lblCarte.setForeground(COULEUR_TEXTE);
+		this.lblCarte.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.add(this.lblCarte);
+
 		this.add(Box.createVerticalStrut(10));
 
-		/*-------------------------------------------------*/
-		/* Sélection du Réseau Agent                       */
-		/*-------------------------------------------------*/
-		if (estModeDemo) 
-		{
-			pnlSwitchAgents = new JPanel(new GridLayout(2, 2, 5, 5));
-			pnlSwitchAgents.setBorder(BorderFactory.createTitledBorder(" Sélection du Réseau Agent "));
-			
-			btnAgentAlpha   = new JButton("ALPHA");
-			btnAgentBravo   = new JButton("BRAVO");
-			btnAgentCharlie = new JButton("CHARLIE");
-			btnAgentDelta   = new JButton("DELTA");
+		/* Scores */
+		JLabel lblScoresTitre = new JLabel("SCORES");
+		lblScoresTitre.setFont(new Font("Arial", Font.BOLD, 12));
+		lblScoresTitre.setForeground(Color.WHITE);
+		lblScoresTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.add(lblScoresTitre);
 
-			Color couleurBouton = new Color(70, 85, 105);
-			for (JButton btn : new JButton[]{btnAgentAlpha, btnAgentBravo, btnAgentCharlie, btnAgentDelta}) {
-				btn.setBackground(couleurBouton);
-				btn.setForeground(Color.WHITE);
-				btn.setFont(new Font("Arial", Font.BOLD, 11));
-			}
+		this.txtScores = new JTextArea(6, 25);
+		this.txtScores.setEditable(false);
+		this.txtScores.setBackground(new Color(30, 34, 42));
+		this.txtScores.setForeground(new Color(180, 200, 230));
+		this.txtScores.setFont(new Font("Monospaced", Font.PLAIN, 11));
+		this.txtScores.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-			btnAgentAlpha.addActionListener(e -> ouvrirFenetreDemo("ALPHA"));
-			btnAgentBravo.addActionListener(e -> ouvrirFenetreDemo("BRAVO"));
-			btnAgentCharlie.addActionListener(e -> ouvrirFenetreDemo("CHARLIE"));
-			btnAgentDelta.addActionListener(e -> ouvrirFenetreDemo("DELTA"));
+		JScrollPane scrollScores = new JScrollPane(this.txtScores);
+		scrollScores.setPreferredSize(new Dimension(240, 120));
+		scrollScores.setMaximumSize(new Dimension(240, 120));
+		scrollScores.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.add(scrollScores);
 
-			pnlSwitchAgents.add(btnAgentAlpha);
-			pnlSwitchAgents.add(btnAgentBravo);
-			pnlSwitchAgents.add(btnAgentCharlie);
-			pnlSwitchAgents.add(btnAgentDelta);
-			
-			this.add(pnlSwitchAgents);
-			this.add(Box.createVerticalStrut(15));
-		}
+		this.add(Box.createVerticalStrut(10));
 
-		/*-------------------------------------------------*/
-		/* Actions de Jeu                                  */
-		/*-------------------------------------------------*/
-		btnPiocher = new JButton("Piocher une Carte");
-		btnPasser  = new JButton("Passer le Tour");
-
-		btnPiocher.setBackground(new Color(45, 115, 75)); 
-		btnPiocher.setForeground(Color.WHITE);
-		btnPiocher.setFont(new Font("Arial", Font.BOLD, 13));
-		btnPiocher.setMaximumSize(new Dimension(260, 35));
-		btnPiocher.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		btnPasser.setBackground(new Color(110, 55, 55));   
-		btnPasser.setForeground(Color.WHITE);
-		btnPasser.setFont(new Font("Arial", Font.BOLD, 13));
-		btnPasser.setMaximumSize(new Dimension(260, 35));
-		btnPasser.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		btnPiocher.addActionListener(e -> {
-			if (estModeDemo) {
-				
-				String[] poolCartes = {"Triangle", "Rond", "Croix", "Carre"};
-				int randomIdx = (int)(Math.random() * poolCartes.length);
-				String cartePiochee = poolCartes[randomIdx];
-				
-				try {
-					// Charge l'image depuis le dossier images
-					ImageIcon originalIcon = new ImageIcon("images/" + cartePiochee.toLowerCase() + ".png");
-					Image imgRedimensionnee = originalIcon.getImage().getScaledInstance(120, 140, Image.SCALE_SMOOTH);
-					lblCarteActive.setIcon(new ImageIcon(imgRedimensionnee));
-					lblCarteActive.setText(""); 
-				} catch (Exception ex) {
-					lblCarteActive.setIcon(null);
-					lblCarteActive.setText("CARTE : " + cartePiochee.toUpperCase());
-				}
-			} else {
-				lblCarteActive.setIcon(null);
-				lblCarteActive.setText("Carte Piochée");
-			}
-			rafraichir();
-		});
-
-		btnPasser.addActionListener(e -> {
-			lblCarteActive.setIcon(null);
-			lblCarteActive.setText("Tour suivant");
-		});
-
-		this.add(btnPiocher);
-		this.add(Box.createVerticalStrut(8));
-		this.add(btnPasser);
+		/* Position survolée */
+		this.lblPosition = new JLabel("Survol : -");
+		this.lblPosition.setFont(new Font("Arial", Font.PLAIN, 10));
+		this.lblPosition.setForeground(new Color(150, 150, 170));
+		this.lblPosition.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.add(this.lblPosition);
 	}
 
-	private void ouvrirFenetreDemo(String nomAgent)
-	{
-		if (this.controleur == null) return;
-		try {
-			java.lang.reflect.Field fieldPlateau = ControleurJeu.class.getDeclaredField("panneauPlateau");
-			fieldPlateau.setAccessible(true);
-			PanneauPlateau plateauPrincipal = (PanneauPlateau) fieldPlateau.get(this.controleur);
-
-			if (plateauPrincipal != null) {
-				java.lang.reflect.Field fieldGraphe = PanneauPlateau.class.getDeclaredField("graphe");
-				fieldGraphe.setAccessible(true);
-				commun.Graphe grapheActuel = (commun.Graphe) fieldGraphe.get(plateauPrincipal);
-
-				JFrame frameAgent = new JFrame("Réseau Tactique Référence - Agent " + nomAgent);
-				frameAgent.setSize(750, 750); 
-				frameAgent.setLocationRelativeTo(null);
-				
-				PanneauPlateau plateauCopie = new PanneauPlateau(grapheActuel, null);
-				frameAgent.add(plateauCopie);
-				frameAgent.setVisible(true);
-			}
-		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(this, "Erreur chargement plateau agent.");
-		}
-	}
-
+	/*----------------------------*/
+	/* Mise à jour                */
+	/*----------------------------*/
 	public void rafraichir()
 	{
-		this.lblManche.setText("Manche : 1 / 4");
-		this.txtScores.setText(
-			"  Agent ALPHA   :  En attente...\n" +
-			"  Agent BRAVO   :  0 pts\n" +
-			"  Agent CHARLIE :  0 pts\n" +
-			"  Agent DELTA   :  0 pts\n"
-		);
+		if (controleur == null) return;
+
+		int manche = controleur.getMancheCourante();
+		this.lblManche.setText("Manche : " + manche + " / 4");
+
+		this.lblJoueur.setText("Joueur : " + controleur.getJoueurCourant());
+
+		int[] scores = controleur.getScores();
+		java.util.List<String> noms = controleur.getNomsJoueurs();
+
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < noms.size(); i++)
+		{
+			sb.append(String.format("%-15s : %3d pts\n", noms.get(i), scores[i]));
+		}
+		this.txtScores.setText(sb.toString());
 	}
 
-	public void setMessage(String msg) {}
+	public void mettreAJourCarte(String carte, boolean estJoker)
+	{
+		String texte = "Carte : " + carte;
+		if (estJoker) { texte += " (JOKER)"; }
+		this.lblCarte.setText(texte);
+	}
+
+	public void mettreAJourTour(String joueur, int idx)
+	{
+		this.lblJoueur.setText("Joueur : " + joueur);
+	}
+
+	public void mettreAJourManche(int manche)
+	{
+		this.lblManche.setText("Manche : " + manche + " / 4");
+	}
+
+	public void setPosition(int ligne, int colonne)
+	{
+		this.lblPosition.setText("Survol : (" + ligne + ", " + colonne + ")");
+	}
+
+	public void setMessage(String msg)
+	{
+		System.out.println("[Info] " + msg);
+	}
+
+	public void afficherClassement(String classement)
+	{
+		JOptionPane.showMessageDialog(this, classement, "Fin de partie", JOptionPane.INFORMATION_MESSAGE);
+	}
 }

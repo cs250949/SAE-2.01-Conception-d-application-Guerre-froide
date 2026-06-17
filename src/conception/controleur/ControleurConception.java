@@ -3,20 +3,31 @@ package conception.controleur;
 import commun.Graphe;
 import commun.Sommet;
 import conception.vue.BarreStatut;
+import conception.vue.FenetreConception;
 import conception.vue.PanneauGrille;
-import java.io.IOException;
 import javax.swing.*;
 
 public class ControleurConception
 {
+	/*----------------------------*/
+	/* Constantes                 */
+	/*----------------------------*/
 	private static final String CHEMIN_PLATEAU = "plateau.txt";
 
-	private PanneauGrille panneauGrille;
-	private BarreStatut   barreStatut;
-	private Graphe        graphe;
-	private String        typeCourant    = "HOPITAL";
-	private int           nbZonesActives = 4;
+	/*----------------------------*/
+	/* Attributs                  */
+	/*----------------------------*/
+	private FenetreConception fenetre;
+	private PanneauGrille     panneauGrille;
+	private BarreStatut       barreStatut;
+	private Graphe            graphe;
+	private String            typeCourant;
+	private int               nbZonesActives;
+	private int               tailleCase;
 
+	/*----------------------------*/
+	/* Constructeurs              */
+	/*----------------------------*/
 	public ControleurConception()
 	{
 		this(7, 7, 4, 4);
@@ -25,16 +36,45 @@ public class ControleurConception
 	public ControleurConception(int largeur, int hauteur, int nbCouleur, int nbZone)
 	{
 		this.nbZonesActives = nbZone;
-		// Utilisation du constructeur par défaut nettoyé en entiers
-		this.graphe         = new Graphe();
+		this.typeCourant    = "HOPITAL";
+		this.tailleCase     = 60;
+		this.graphe         = new Graphe(hauteur, largeur);
 		chargerPlateau();
 	}
 
+	/*----------------------------*/
+	/* Lancement de l'éditeur     */
+	/*----------------------------*/
+	public void lancerEditeur()
+	{
+		this.fenetre = new FenetreConception(this);
+	}
+
+	/*----------------------------*/
+	/* Accesseurs                 */
+	/*----------------------------*/
+	public Graphe getGraphe()
+	{
+		return this.graphe;
+	}
+
+	public int getTailleCase()
+	{
+		return this.tailleCase;
+	}
+
+	/*----------------------------*/
+	/* Modificateurs              */
+	/*----------------------------*/
 	public void setVues(PanneauGrille grille, BarreStatut statut)
 	{
 		this.panneauGrille = grille;
 		this.barreStatut   = statut;
-		this.panneauGrille.setGraphe(this.graphe);
+		if (this.panneauGrille != null)
+		{
+			this.panneauGrille.setGraphe(this.graphe);
+			this.panneauGrille.setTailleCase(this.tailleCase);
+		}
 	}
 
 	public void setTypeCourant(String type)
@@ -46,15 +86,22 @@ public class ControleurConception
 	{
 		this.nbZonesActives = nb;
 		if (panneauGrille != null)
+		{
 			panneauGrille.mettreAJourIcons();
+		}
 	}
 
 	public void setMessage(String msg)
 	{
 		if (barreStatut != null)
+		{
 			barreStatut.setMessage(msg);
+		}
 	}
 
+	/*----------------------------*/
+	/* Gestion des événements     */
+	/*----------------------------*/
 	public void CelluleCliquee(int ligne, int colonne)
 	{
 		if (!graphe.estCaseAutorisee(ligne, colonne))
@@ -64,8 +111,7 @@ public class ControleurConception
 		}
 
 		Sommet s = graphe.getSommet(ligne, colonne);
-		
-		// Si le sommet n'existe pas encore au clic dans l'éditeur, on le crée à la volée
+
 		if (s == null)
 		{
 			String blocParDefaut = graphe.determinerBloc(ligne, colonne);
@@ -76,7 +122,7 @@ public class ControleurConception
 		{
 			s.setType(typeCourant);
 		}
-		
+
 		panneauGrille.mettreAJourIcons();
 		setMessage("Cellule [" + ligne + ", " + colonne + "] → " + typeCourant + " / Faction : " + s.getBloc());
 	}
@@ -84,19 +130,25 @@ public class ControleurConception
 	public void CelluleSurvolee(int ligne, int colonne)
 	{
 		if (barreStatut != null)
+		{
 			barreStatut.setPosition(ligne, colonne);
+		}
 	}
 
+	/*----------------------------*/
+	/* Gestion du plateau         */
+	/*----------------------------*/
 	public void chargerPlateau()
 	{
-		
 		if (this.graphe == null)
 		{
 			this.graphe = new Graphe();
 		}
-		
+
 		if (panneauGrille != null)
+		{
 			panneauGrille.setGraphe(graphe);
+		}
 		setMessage("Génération d'un plateau vierge par défaut.");
 	}
 
@@ -108,17 +160,25 @@ public class ControleurConception
 	public void reinitialiser()
 	{
 		this.graphe = new Graphe();
+		this.tailleCase = 60;
 		if (panneauGrille != null)
+		{
 			panneauGrille.setGraphe(graphe);
+			panneauGrille.setTailleCase(this.tailleCase);
+		}
 		setMessage("Grille effacée.");
 	}
 
-	public void redimensionnerPlateau(int hauteur, int largeur)
+	public void redimensionnerPlateau(int hauteur, int largeur, int tailleCase)
 	{
-		this.graphe = new Graphe();
+		this.tailleCase = tailleCase;
+		this.graphe = new Graphe(hauteur, largeur);
 		if (panneauGrille != null)
+		{
 			panneauGrille.setGraphe(graphe);
-		setMessage("Plateau rafraîchi : " + largeur + " × " + hauteur);
+			panneauGrille.setTailleCase(tailleCase);
+		}
+		setMessage("Plateau rafraîchi : " + largeur + " × " + hauteur + " | Case : " + tailleCase + "px");
 	}
 
 	public void afficherRegles()
@@ -147,26 +207,47 @@ public class ControleurConception
 
 	public void quitter()
 	{
+		if (fenetre != null)
+		{
+			fenetre.dispose();
+		}
 		System.exit(0);
 	}
 
+	/*----------------------------*/
+	/* Lancement du jeu           */
+	/*----------------------------*/
 	public void lancerJeu()
 	{
-		// Calcule et relie les sommets par rayons avant d'ouvrir la fenêtre 
 		if (this.graphe != null)
 		{
 			this.graphe.remonterAretes();
 		}
 
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new jeu.vue.FenetreJeu(ControleurConception.this.graphe);
+		if (this.fenetre != null)
+		{
+			this.fenetre.dispose();
+		}
+
+		final Graphe g = this.graphe;
+		final int    tc = this.tailleCase;
+
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				jeu.controleur.ControleurJeu ctrlJeu = new jeu.controleur.ControleurJeu(g, tc);
+				ctrlJeu.lancerJeu();
 			}
 		});
 	}
 
-	public Graphe getGraphe()
+	/*----------------------------*/
+	/* MAIN - Point d'entrée      */
+	/*----------------------------*/
+	public static void main(String[] args)
 	{
-		return graphe;
+		ControleurConception ctrl = new ControleurConception(7, 7, 4, 4);
+		ctrl.lancerEditeur();
 	}
 }
