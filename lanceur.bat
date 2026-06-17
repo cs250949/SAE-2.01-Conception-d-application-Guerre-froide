@@ -11,17 +11,28 @@ echo Compilation...
 cd ./src/
 javac @compile.txt -d ../class
 
-if %errorlevel% neq 0 (
-    echo ERREUR DE COMPILATION !
-    pause
-    exit /b
-)
+echo Copie des ressources...
+xcopy /E /I /Y images ..\class\images > nul
+xcopy /E /I /Y data ..\class\data > nul
 
-echo Copie des images...
-xcopy /E /I /Y images ..\class\images
+echo.
+echo Que voulez-vous lancer ?
+echo 1. Editeur de plateau
+echo 2. Jeu (charge plateau.txt)
+echo.
+set /p choix="Votre choix (1 ou 2) : "
 
-echo Execution...
 cd ../class
-java conception.controleur.ControleurConception
+
+if "%choix%"=="1" (
+    echo Lancement de l'editeur...
+    java conception.controleur.ControleurConception
+) else if "%choix%"=="2" (
+    echo Lancement du jeu...
+    java jeu.controleur.ControleurJeu
+) else (
+    echo Choix invalide, lancement du jeu par defaut...
+    java jeu.controleur.ControleurJeu
+)
 
 pause

@@ -129,9 +129,11 @@ public class PanneauPlateau extends JPanel
 				if (s != null && s.getZone() != null)
 				{
 					String zone = s.getZone();
-					if (zone.contains("OUEST"))       { couleurFond = new Color(45, 60, 85);  }
+					if (zone.contains("ROUGE"))       { couleurFond = new Color(90, 40, 40);  }
+					else if (zone.contains("BLEU"))   { couleurFond = new Color(40, 50, 90);  }
+					else if (zone.contains("OUEST"))  { couleurFond = new Color(45, 60, 85);  }
 					else if (zone.contains("EST"))    { couleurFond = new Color(90, 50, 50);  }
-					else if (zone.contains("CHINOIS")) { couleurFond = new Color(50, 80, 55);  }
+					else if (zone.contains("CHINOIS")){ couleurFond = new Color(50, 80, 55);  }
 					else if (zone.contains("NON"))    { couleurFond = new Color(65, 65, 50);  }
 				}
 

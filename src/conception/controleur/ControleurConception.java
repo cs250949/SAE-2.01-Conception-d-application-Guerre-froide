@@ -30,7 +30,7 @@ public class ControleurConception
 	/*----------------------------*/
 	public ControleurConception()
 	{
-		this(7, 7, 4, 4);
+		this(9, 8, 4, 4);
 	}
 
 	public ControleurConception(int largeur, int hauteur, int nbCouleur, int nbZone)

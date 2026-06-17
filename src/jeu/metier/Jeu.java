@@ -283,9 +283,18 @@ public class Jeu
 			if (mancheCourante > NB_MANCHES)
 			{
 				partieTerminee = true;
-				String classement = "SCORE FINAL : " + score + " points\n" +
-					"Infrastructures visitées : " + sommetsVisites.size() + "\n" +
-					"Zones visitées : " + zonesVisitees.size();
+
+				int nbSommets = sommetsVisites.size();
+				int nbZones   = zonesVisitees.size();
+
+				String classement = "═══════════════════════════════\n" +
+					"  FIN DE PARTIE\n" +
+					"═══════════════════════════════\n" +
+					"  Sommets visités : " + nbSommets + "\n" +
+					"  Zones visitées  : " + nbZones + "\n" +
+					"  Calcul : " + nbSommets + " × " + nbZones + " = " + score + " pts\n" +
+					"═══════════════════════════════";
+
 				for (Ecouteur e : ecouteurs) { e.Fin(classement); }
 				return;
 			}
@@ -305,7 +314,10 @@ public class Jeu
 	/*----------------------------*/
 	private void calculerScore()
 	{
-		this.score = sommetsVisites.size() * 2 + zonesVisitees.size() * 5;
+		int nbSommets = this.sommetsVisites.size();
+		int nbZones   = this.zonesVisitees.size();
+
+		this.score = nbSommets * nbZones;
 
 		for (Ecouteur e : ecouteurs)
 		{

@@ -17,7 +17,7 @@ public class Graphe
 	/*----------------------------*/
 	public Graphe()
 	{
-		this(7, 7);
+		this(9, 8);
 	}
 
 	public Graphe(int nbLignes, int nbColonnes)
@@ -128,5 +128,61 @@ public class Graphe
 				colCherche += dCol;
 			}
 		}
+	}
+
+	/*----------------------------*/
+	/* Chargement depuis fichier  */
+	/*----------------------------*/
+	public static Graphe chargerDepuisFichier(String cheminFichier)
+	{
+		Graphe graphe = null;
+
+		try
+		{
+			java.io.BufferedReader lecteur = new java.io.BufferedReader(
+				new java.io.FileReader(cheminFichier));
+
+			String ligne = lecteur.readLine();
+			if (ligne != null)
+			{
+				String[] dimensions = ligne.split(" ");
+				int nbLignes   = Integer.parseInt(dimensions[0]);
+				int nbColonnes = Integer.parseInt(dimensions[1]);
+
+				graphe = new Graphe(nbLignes, nbColonnes);
+
+				while ((ligne = lecteur.readLine()) != null)
+				{
+					ligne = ligne.trim();
+					if (ligne.isEmpty()) continue;
+
+					String[] parts = ligne.split(" ");
+					if (parts.length >= 4)
+					{
+						int    lig  = Integer.parseInt(parts[0]);
+						int    col  = Integer.parseInt(parts[1]);
+						String type = parts[2];
+						String zone = parts[3];
+
+						Sommet s = new Sommet(lig, col, type, zone);
+						graphe.getSommets().add(s);
+					}
+				}
+			}
+
+			lecteur.close();
+
+			if (graphe != null)
+			{
+				graphe.remonterAretes();
+			}
+		}
+		catch (Exception e)
+		{
+			System.out.println("Erreur chargement plateau : " + e.getMessage());
+			return null;
+		}
+
+		return graphe;
 	}
 }

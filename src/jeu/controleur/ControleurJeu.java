@@ -163,7 +163,7 @@ public class ControleurJeu
 
 	public String getJoueurCourant()
 	{
-		return "Joueur";
+		return "Agent Solo";
 	}
 
 	public int getJoueurCourantIdx()
@@ -190,18 +190,16 @@ public class ControleurJeu
 		return jeu != null ? jeu.getLignesTracees() : new ArrayList<Arete>();
 	}
 
-	public int getNbZonesVisitees()
-	{
-		if (jeu == null) return 0;
-		List<String> zones = jeu.getZonesVisitees();
-		return zones != null ? zones.size() : 0;
-	}
-
 	public int getNbSommetsVisites()
 	{
 		if (jeu == null) return 0;
-		List<Sommet> sommets = jeu.getSommetsVisites();
-		return sommets != null ? sommets.size() : 0;
+		return jeu.getSommetsVisites().size();
+	}
+
+	public int getNbZonesVisitees()
+	{
+		if (jeu == null) return 0;
+		return jeu.getZonesVisitees().size();
 	}
 
 	public int getNbCartesRestantes()
@@ -302,34 +300,13 @@ public class ControleurJeu
 	/*----------------------------*/
 	public static void main(String[] args)
 	{
-		Graphe g = new Graphe(7, 7);
+		Graphe g = Graphe.chargerDepuisFichier("data/plateau.txt");
 
-		/* Zone OUEST (haut-gauche) */
-		g.getSommets().add(new Sommet(0, 0, "BASE_DEPART", "OUEST"));
-		g.getSommets().add(new Sommet(0, 2, "HOPITAL", "OUEST"));
-		g.getSommets().add(new Sommet(2, 0, "PORT", "OUEST"));
-		g.getSommets().add(new Sommet(2, 2, "PETROLIER", "OUEST"));
-		g.getSommets().add(new Sommet(1, 1, "VIDE", "OUEST"));
-
-		/* Zone EST (haut-droite) */
-		g.getSommets().add(new Sommet(0, 4, "BASE_DEPART", "EST"));
-		g.getSommets().add(new Sommet(0, 6, "TANK", "EST"));
-		g.getSommets().add(new Sommet(2, 4, "FERME", "EST"));
-		g.getSommets().add(new Sommet(2, 6, "HOPITAL", "EST"));
-
-		/* Zone CHINOIS (bas-gauche) */
-		g.getSommets().add(new Sommet(4, 0, "BASE_DEPART", "CHINOIS"));
-		g.getSommets().add(new Sommet(4, 2, "USINE", "CHINOIS"));
-		g.getSommets().add(new Sommet(6, 0, "TANK", "CHINOIS"));
-		g.getSommets().add(new Sommet(6, 2, "PORT", "CHINOIS"));
-
-		/* Zone NON-ALIGNE (bas-droite) */
-		g.getSommets().add(new Sommet(4, 4, "BASE_DEPART", "NON-ALIGNE"));
-		g.getSommets().add(new Sommet(4, 6, "FERME", "NON-ALIGNE"));
-		g.getSommets().add(new Sommet(6, 4, "PETROLIER", "NON-ALIGNE"));
-		g.getSommets().add(new Sommet(6, 6, "CHAR", "NON-ALIGNE"));
-
-		g.remonterAretes();
+		if (g == null)
+		{
+			System.out.println("Erreur : plateau.txt introuvable !");
+			return;
+		}
 
 		ControleurJeu ctrl = new ControleurJeu(g, 60);
 		ctrl.lancerJeu();

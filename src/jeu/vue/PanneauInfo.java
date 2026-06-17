@@ -3,6 +3,7 @@ package jeu.vue;
 import jeu.controleur.ControleurJeu;
 
 import java.awt.*;
+import java.util.HashMap;
 import javax.swing.*;
 
 public class PanneauInfo extends JPanel
@@ -16,11 +17,13 @@ public class PanneauInfo extends JPanel
 	/*----------------------------*/
 	/* Attributs                  */
 	/*----------------------------*/
-	private ControleurJeu controleur;
+	private ControleurJeu              controleur;
+	private HashMap<String, ImageIcon> cacheImages;
 
 	private JLabel        lblManche;
 	private JLabel        lblJoueur;
 	private JLabel        lblCarte;
+	private JLabel        lblImageCarte;
 	private JTextArea     txtScores;
 	private JLabel        lblPosition;
 
@@ -29,11 +32,14 @@ public class PanneauInfo extends JPanel
 	/*----------------------------*/
 	public PanneauInfo(ControleurJeu controleur)
 	{
-		this.controleur = controleur;
+		this.controleur  = controleur;
+		this.cacheImages = new HashMap<String, ImageIcon>();
+
+		chargerImages();
 
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		this.setPreferredSize(new Dimension(260, 350));
-		this.setMaximumSize(new Dimension(260, 400));
+		this.setPreferredSize(new Dimension(260, 400));
+		this.setMaximumSize(new Dimension(260, 450));
 		this.setBackground(COULEUR_FOND);
 		this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -56,7 +62,7 @@ public class PanneauInfo extends JPanel
 		this.add(Box.createVerticalStrut(5));
 
 		/* Joueur courant */
-		this.lblJoueur = new JLabel("Joueur : ???");
+		this.lblJoueur = new JLabel("Joueur : Agent Solo");
 		this.lblJoueur.setFont(new Font("Arial", Font.BOLD, 12));
 		this.lblJoueur.setForeground(new Color(255, 200, 100));
 		this.lblJoueur.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -64,23 +70,33 @@ public class PanneauInfo extends JPanel
 
 		this.add(Box.createVerticalStrut(5));
 
-		/* Carte active */
+		/* Carte active (texte) */
 		this.lblCarte = new JLabel("Carte : Aucune");
 		this.lblCarte.setFont(new Font("Arial", Font.ITALIC, 12));
 		this.lblCarte.setForeground(COULEUR_TEXTE);
 		this.lblCarte.setAlignmentX(Component.LEFT_ALIGNMENT);
 		this.add(this.lblCarte);
 
+		this.add(Box.createVerticalStrut(5));
+
+		/* Image de la carte */
+		this.lblImageCarte = new JLabel("", SwingConstants.CENTER);
+		this.lblImageCarte.setPreferredSize(new Dimension(140, 140));
+		this.lblImageCarte.setMaximumSize(new Dimension(140, 140));
+		this.lblImageCarte.setAlignmentX(Component.CENTER_ALIGNMENT);
+		this.lblImageCarte.setBorder(BorderFactory.createLineBorder(new Color(255, 255, 255, 40), 1));
+		this.add(this.lblImageCarte);
+
 		this.add(Box.createVerticalStrut(10));
 
 		/* Scores */
-		JLabel lblScoresTitre = new JLabel("SCORES");
+		JLabel lblScoresTitre = new JLabel("SCORE");
 		lblScoresTitre.setFont(new Font("Arial", Font.BOLD, 12));
 		lblScoresTitre.setForeground(Color.WHITE);
 		lblScoresTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
 		this.add(lblScoresTitre);
 
-		this.txtScores = new JTextArea(6, 25);
+		this.txtScores = new JTextArea(8, 25);
 		this.txtScores.setEditable(false);
 		this.txtScores.setBackground(new Color(30, 34, 42));
 		this.txtScores.setForeground(new Color(180, 200, 230));
@@ -88,8 +104,8 @@ public class PanneauInfo extends JPanel
 		this.txtScores.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
 		JScrollPane scrollScores = new JScrollPane(this.txtScores);
-		scrollScores.setPreferredSize(new Dimension(240, 120));
-		scrollScores.setMaximumSize(new Dimension(240, 120));
+		scrollScores.setPreferredSize(new Dimension(240, 140));
+		scrollScores.setMaximumSize(new Dimension(240, 140));
 		scrollScores.setAlignmentX(Component.LEFT_ALIGNMENT);
 		this.add(scrollScores);
 
@@ -104,25 +120,76 @@ public class PanneauInfo extends JPanel
 	}
 
 	/*----------------------------*/
+	/* Chargement des images      */
+	/*----------------------------*/
+	private void chargerImages()
+	{
+		String[][] correspondance = {
+			{"HOPITAL",    "hopital.png"},
+			{"PORT",       "port.png"},
+			{"USINE",      "usine.png"},
+			{"CHAR",       "char.png"},
+			{"FER",        "ferme.png"},
+			{"FERME",      "ferme.png"},
+			{"PET",        "petrolier.png"},
+			{"PETROLIER",  "petrolier.png"},
+			{"TAN",        "tank.png"},
+			{"TANK",       "tank.png"},
+			{"BAS",        "base.png"},
+			{"BASE_DEPART","base.png"},
+			{"VIDE",       "vide.png"},
+			{"JOKER",      "joker.png"}
+		};
+
+		for (int i = 0; i < correspondance.length; i++)
+		{
+			String type   = correspondance[i][0];
+			String fichier = correspondance[i][1];
+
+			try
+			{
+				java.net.URL imgUrl = getClass().getResource("/images/" + fichier);
+				if (imgUrl != null)
+				{
+					ImageIcon iconOriginal = new ImageIcon(imgUrl);
+					Image imgRedim = iconOriginal.getImage().getScaledInstance(140, 140, Image.SCALE_SMOOTH);
+					cacheImages.put(type, new ImageIcon(imgRedim));
+				}
+			}
+			catch (Exception e)
+			{
+				System.out.println("Erreur chargement image : " + fichier);
+			}
+		}
+	}
+
+	/*----------------------------*/
 	/* Mise à jour                */
 	/*----------------------------*/
 	public void rafraichir()
 	{
 		if (controleur == null) return;
 
+		/* Manche */
 		int manche = controleur.getMancheCourante();
 		this.lblManche.setText("Manche : " + manche + " / 4");
 
+		/* Joueur */
 		this.lblJoueur.setText("Joueur : " + controleur.getJoueurCourant());
 
-		int[] scores = controleur.getScores();
-		java.util.List<String> noms = controleur.getNomsJoueurs();
+		/* Calcul du score */
+		int nbSommets = controleur.getNbSommetsVisites();
+		int nbZones   = controleur.getNbZonesVisitees();
+		int score     = controleur.getScore();
 
+		/* Affichage du score */
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < noms.size(); i++)
-		{
-			sb.append(String.format("%-15s : %3d pts\n", noms.get(i), scores[i]));
-		}
+		sb.append("══════════════════════\n");
+		sb.append(String.format(" Sommets visités : %2d\n", nbSommets));
+		sb.append(String.format(" Zones visitées  : %2d\n", nbZones));
+		sb.append("──────────────────────\n");
+		sb.append(String.format(" Score : %d × %d = %3d pts\n", nbSommets, nbZones, score));
+		sb.append("══════════════════════");
 		this.txtScores.setText(sb.toString());
 	}
 
@@ -131,6 +198,17 @@ public class PanneauInfo extends JPanel
 		String texte = "Carte : " + carte;
 		if (estJoker) { texte += " (JOKER)"; }
 		this.lblCarte.setText(texte);
+
+		/* Afficher l'image correspondante */
+		ImageIcon icon = cacheImages.get(carte);
+		if (icon != null)
+		{
+			this.lblImageCarte.setIcon(icon);
+		}
+		else
+		{
+			this.lblImageCarte.setIcon(null);
+		}
 	}
 
 	public void mettreAJourTour(String joueur, int idx)

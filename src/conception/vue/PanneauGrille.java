@@ -57,15 +57,12 @@ public class PanneauGrille extends JPanel
 		int nbLignes = this.graphe.getNbLignes();
 		int nbCols   = this.graphe.getNbColonnes();
 
-		/* Nettoyage de l'ancienne grille de boutons */
 		this.removeAll();
 		this.setLayout(new GridLayout(nbLignes, nbCols, 2, 2));
 		this.boutons = new JButton[nbLignes][nbCols];
 
-		/* Calcul de la taille de police adaptée */
 		int taillePolice = Math.max(8, this.tailleCase / 5);
 
-		/* Génération de la nouvelle matrice de boutons */
 		for (int i = 0; i < nbLignes; i++)
 		{
 			for (int j = 0; j < nbCols; j++)
@@ -121,13 +118,14 @@ public class PanneauGrille extends JPanel
 				Sommet s = graphe.getSommet(i, j);
 				if (s != null && boutons[i][j] != null)
 				{
-					/* Couleur de fond selon la zone */
 					String zone = s.getZone();
 					if (zone != null)
 					{
-						if (zone.contains("OUEST"))       { boutons[i][j].setBackground(new Color(45, 60, 85));  }
+						if (zone.contains("ROUGE"))       { boutons[i][j].setBackground(new Color(90, 40, 40));  }
+						else if (zone.contains("BLEU"))   { boutons[i][j].setBackground(new Color(40, 50, 90));  }
+						else if (zone.contains("OUEST"))  { boutons[i][j].setBackground(new Color(45, 60, 85));  }
 						else if (zone.contains("EST"))    { boutons[i][j].setBackground(new Color(90, 50, 50));  }
-						else if (zone.contains("CHINOIS")) { boutons[i][j].setBackground(new Color(50, 80, 55));  }
+						else if (zone.contains("CHINOIS")){ boutons[i][j].setBackground(new Color(50, 80, 55));  }
 						else if (zone.contains("NON"))    { boutons[i][j].setBackground(new Color(65, 65, 50));  }
 						else                              { boutons[i][j].setBackground(new Color(48, 52, 63));  }
 					}
@@ -138,7 +136,6 @@ public class PanneauGrille extends JPanel
 						boutons[i][j].setText(txt);
 						boutons[i][j].setForeground(Color.WHITE);
 
-						/* Couleur du texte selon le type */
 						if (s.getType().equals("BASE_DEPART"))
 						{
 							boutons[i][j].setBackground(new Color(100, 70, 30));
