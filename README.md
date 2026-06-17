@@ -24,8 +24,11 @@ Jeu de stratégie où des agents doivent connecter un réseau de logistique sans
 git clone git@github.com:cs250949/SAE-2.01-Conception-d-application-Guerre-froide.git
 cd SAE-2.01-Conception-d-application-Guerre-froide
 ```
-
-## Compilation et lancement du jeu
+## Compilation
+```bash
+chmod +x lanceur.sh
+```
+## lancement du jeu
 ```bash
 ./lanceur.sh
 ```
