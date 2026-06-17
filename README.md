@@ -25,11 +25,7 @@ git clone git@github.com:cs250949/SAE-2.01-Conception-d-application-Guerre-froid
 cd SAE-2.01-Conception-d-application-Guerre-froide
 ```
 
-## Compilation
+## Compilation et lancement du jeu
 ```bash
-javac "@compile.txt"
-```
-## Lancement du jeu 
-```bash
-java conception.vue.fenetreConception
+./lanceur.sh
 ```
