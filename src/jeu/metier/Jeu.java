@@ -12,11 +12,18 @@ public class Jeu
 	/*----------------------------*/
 	public static final int NB_MANCHES = 4;
 
+	/* États de l'automate */
+	private static final int ETAT_ANCRAGE  = 0;
+	private static final int ETAT_ATTENTE  = 1;
+	private static final int ETAT_DEPLACER = 2;
+	private static final int ETAT_ERREUR   = 3;
+
 	/*----------------------------*/
 	/* Attributs                  */
 	/*----------------------------*/
 	private int                mancheCourante;
 	private boolean            partieTerminee;
+	private int                etatCourant;
 
 	private List<Arete>        lignesTracees;
 	private List<Sommet>       sommetsVisites;
@@ -53,6 +60,7 @@ public class Jeu
 	{
 		this.mancheCourante   = 1;
 		this.partieTerminee   = false;
+		this.etatCourant      = ETAT_ANCRAGE;
 		this.ecouteurs        = new ArrayList<Ecouteur>();
 		this.lignesTracees    = new ArrayList<Arete>();
 		this.sommetsVisites   = new ArrayList<Sommet>();
@@ -117,6 +125,7 @@ public class Jeu
 		this.positionActuelle = null;
 		this.mancheCourante = 1;
 		this.partieTerminee = false;
+		this.etatCourant = ETAT_ANCRAGE;
 
 		for (Sommet s : g.getSommets())
 		{
@@ -133,6 +142,12 @@ public class Jeu
 	public void piocher()
 	{
 		if (partieTerminee) return;
+
+		if (etatCourant != ETAT_ATTENTE)
+		{
+			notifierMessage("Ancrez-vous d'abord sur une BASE_DEPART !");
+			return;
+		}
 
 		if (carteActive != null)
 		{
@@ -167,75 +182,40 @@ public class Jeu
 		Sommet cible = graphe.getSommet(lig, col);
 		if (cible == null)
 		{
+			etatCourant = ETAT_ERREUR;
 			notifierMessage("Case vide !");
 			return false;
 		}
 
-		/* PREMIER COUP : ancrage sur une BASE_DEPART */
-		if (positionActuelle == null)
+		switch (etatCourant)
 		{
-			if (!cible.getType().equals("BASE_DEPART"))
-			{
-				notifierMessage("Commencez par vous ancrer sur une BASE_DEPART !");
+			case ETAT_ANCRAGE:
+				return gererAncrage(cible);
+
+			case ETAT_ATTENTE:
+				return gererDeplacement(cible);
+
+			case ETAT_ERREUR:
+				etatCourant = ETAT_ATTENTE;
+				return gererDeplacement(cible);
+
+			default:
 				return false;
-			}
-
-			cible.setVisite(true);
-			if (!sommetsVisites.contains(cible))
-			{
-				sommetsVisites.add(cible);
-			}
-
-			String zone = cible.getZone();
-			if (zone != null && !zonesVisitees.contains(zone))
-			{
-				zonesVisitees.add(zone);
-			}
-
-			positionActuelle = cible;
-			calculerScore();
-			notifierMessage("Ancrage réussi sur la base en (" + lig + "," + col + ") !");
-			notifierRefresh();
-			return true;
 		}
+	}
 
-		/* COUPS SUIVANTS */
-		if (carteActive == null)
+	/*----------------------------*/
+	/* Gestion de l'ancrage       */
+	/*----------------------------*/
+	private boolean gererAncrage(Sommet cible)
+	{
+		if (!cible.getType().equals("BASE_DEPART"))
 		{
-			notifierMessage("Piochez d'abord une carte !");
+			etatCourant = ETAT_ERREUR;
+			notifierMessage("Commencez par vous ancrer sur une BASE_DEPART !");
 			return false;
 		}
 
-		if (!sontAdjacents(positionActuelle, cible))
-		{
-			notifierMessage("Cette case n'est pas adjacente à votre position !");
-			return false;
-		}
-
-		if (!carteActiveEstJoker && !cible.getType().equals(carteActive))
-		{
-			notifierMessage("L'infrastructure ne correspond pas à votre carte (" + carteActive + ") !");
-			return false;
-		}
-
-		if (detecterCroisement(positionActuelle, cible))
-		{
-			notifierMessage("Ce tracé croise un tracé existant !");
-			return false;
-		}
-
-		/* Créer l'arête */
-		Arete nouvelleArete = new Arete(positionActuelle, cible);
-		if (lignesTracees.contains(nouvelleArete))
-		{
-			notifierMessage("Ce tracé existe déjà !");
-			return false;
-		}
-
-		lignesTracees.add(nouvelleArete);
-		for (Ecouteur e : ecouteurs) { e.LigneTracee(nouvelleArete); }
-
-		/* Marquer le sommet visité */
 		cible.setVisite(true);
 		if (!sommetsVisites.contains(cible))
 		{
@@ -248,19 +228,99 @@ public class Jeu
 			zonesVisitees.add(zone);
 		}
 
-		/* Consommer la carte */
-		carteActive = null;
-		carteActiveEstJoker = false;
-
-		/* Mettre à jour la position */
 		positionActuelle = cible;
-
-		/* Calculer le score */
 		calculerScore();
 
-		notifierMessage("Coup joué en (" + lig + "," + col + ") !");
+		etatCourant = ETAT_ATTENTE;
+		notifierMessage("Ancrage réussi ! Piochez une carte.");
 		notifierRefresh();
 		return true;
+	}
+
+	/*----------------------------*/
+	/* Gestion du déplacement     */
+	/*----------------------------*/
+	private boolean gererDeplacement(Sommet cible)
+	{
+		if (carteActive == null)
+		{
+			etatCourant = ETAT_ERREUR;
+			notifierMessage("Piochez d'abord une carte !");
+			return false;
+		}
+
+		if (!sontReliesParArete(positionActuelle, cible))
+		{
+			etatCourant = ETAT_ERREUR;
+			notifierMessage("Ces deux sommets ne sont pas reliés par une arête !");
+			return false;
+		}
+
+		if (!carteActiveEstJoker && !cible.getType().equals(carteActive))
+		{
+			etatCourant = ETAT_ERREUR;
+			notifierMessage("L'infrastructure ne correspond pas à votre carte (" + carteActive + ") !");
+			return false;
+		}
+
+		if (detecterCroisement(positionActuelle, cible))
+		{
+			etatCourant = ETAT_ERREUR;
+			notifierMessage("Ce tracé croise un tracé existant !");
+			return false;
+		}
+
+		Arete nouvelleArete = new Arete(positionActuelle, cible);
+		if (lignesTracees.contains(nouvelleArete))
+		{
+			etatCourant = ETAT_ERREUR;
+			notifierMessage("Ce tracé existe déjà !");
+			return false;
+		}
+
+		lignesTracees.add(nouvelleArete);
+		for (Ecouteur e : ecouteurs) { e.LigneTracee(nouvelleArete); }
+
+		cible.setVisite(true);
+		if (!sommetsVisites.contains(cible))
+		{
+			sommetsVisites.add(cible);
+		}
+
+		String zone = cible.getZone();
+		if (zone != null && !zonesVisitees.contains(zone))
+		{
+			zonesVisitees.add(zone);
+		}
+
+		carteActive = null;
+		carteActiveEstJoker = false;
+		positionActuelle = cible;
+		calculerScore();
+
+		etatCourant = ETAT_ATTENTE;
+		notifierMessage("Déplacement réussi ! Piochez une nouvelle carte.");
+		notifierRefresh();
+		return true;
+	}
+
+	/*----------------------------*/
+	/* Vérification arête         */
+	/*----------------------------*/
+	private boolean sontReliesParArete(Sommet a, Sommet b)
+	{
+		if (a == null || b == null) return false;
+		if (a == b) return false;
+
+		for (Arete arete : graphe.getAretes())
+		{
+			if ((arete.getDepart() == a && arete.getArrivee() == b) ||
+				(arete.getDepart() == b && arete.getArrivee() == a))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/*----------------------------*/
@@ -270,12 +330,11 @@ public class Jeu
 	{
 		if (partieTerminee) return;
 
-		/* Réinitialiser la position pour le prochain tour */
 		positionActuelle = null;
 		carteActive = null;
 		carteActiveEstJoker = false;
+		etatCourant = ETAT_ANCRAGE;
 
-		/* Vérifier si la pioche est vide */
 		if (pioche.isEmpty())
 		{
 			mancheCourante++;
@@ -302,7 +361,7 @@ public class Jeu
 			{
 				initialiserPioche();
 				for (Ecouteur e : ecouteurs) { e.MancheChange(mancheCourante); }
-				notifierMessage("Manche " + mancheCourante + " / " + NB_MANCHES + " !");
+				notifierMessage("Manche " + mancheCourante + " / " + NB_MANCHES + " ! Ancrez-vous.");
 			}
 		}
 
@@ -326,15 +385,8 @@ public class Jeu
 	}
 
 	/*----------------------------*/
-	/* Vérifications              */
+	/* Détection croisement       */
 	/*----------------------------*/
-	private boolean sontAdjacents(Sommet a, Sommet b)
-	{
-		int dl = Math.abs(a.getLigne() - b.getLigne());
-		int dc = Math.abs(a.getColonne() - b.getColonne());
-		return (dl <= 1 && dc <= 1) && !(dl == 0 && dc == 0);
-	}
-
 	private boolean detecterCroisement(Sommet a, Sommet b)
 	{
 		if (Math.abs(a.getLigne() - b.getLigne()) == 1 &&
@@ -381,6 +433,7 @@ public class Jeu
 
 		positionActuelle = cible;
 		carteActive = null;
+		etatCourant = ETAT_ATTENTE;
 		calculerScore();
 		notifierRefresh();
 		return true;
@@ -409,4 +462,5 @@ public class Jeu
 	public List<Sommet>   getSommetsVisites()   { return this.sommetsVisites;      }
 	public List<String>   getZonesVisitees()    { return this.zonesVisitees;       }
 	public int            getNbCartesRestantes(){ return this.pioche.size();       }
+	public int            getEtatCourant()      { return this.etatCourant;         }
 }
