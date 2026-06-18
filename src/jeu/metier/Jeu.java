@@ -15,7 +15,6 @@ public class Jeu
 	/* États de l'automate */
 	private static final int ETAT_ANCRAGE  = 0;
 	private static final int ETAT_ATTENTE  = 1;
-	private static final int ETAT_DEPLACER = 2;
 	private static final int ETAT_ERREUR   = 3;
 
 	/*----------------------------*/
@@ -143,15 +142,20 @@ public class Jeu
 	{
 		if (partieTerminee) return;
 
-		if (etatCourant != ETAT_ATTENTE)
+		if (etatCourant == ETAT_ERREUR)
 		{
-			notifierMessage("Ancrez-vous d'abord sur une BASE_DEPART !");
+			etatCourant = ETAT_ATTENTE;
+		}
+
+		if (etatCourant == ETAT_ANCRAGE)
+		{
+			notifierMessage("Ancrez-vous d'abord sur une BASE_DEPART, puis piochez.");
 			return;
 		}
 
 		if (carteActive != null)
 		{
-			notifierMessage("Vous avez déjà une carte en main !");
+			notifierMessage("Vous avez déjà une carte en main ! Placez-la d'abord.");
 			return;
 		}
 
@@ -187,21 +191,27 @@ public class Jeu
 			return false;
 		}
 
-		switch (etatCourant)
+		/* Si le joueur clique sur une BASE_DEPART, on tente l'ancrage */
+		if (cible.getType().equals("BASE_DEPART") && (etatCourant == ETAT_ANCRAGE || positionActuelle == null))
 		{
-			case ETAT_ANCRAGE:
-				return gererAncrage(cible);
-
-			case ETAT_ATTENTE:
-				return gererDeplacement(cible);
-
-			case ETAT_ERREUR:
-				etatCourant = ETAT_ATTENTE;
-				return gererDeplacement(cible);
-
-			default:
-				return false;
+			etatCourant = ETAT_ANCRAGE;
+			return gererAncrage(cible);
 		}
+
+		/* Si déjà ancré, on gère le déplacement */
+		if (etatCourant == ETAT_ATTENTE || etatCourant == ETAT_ERREUR)
+		{
+			if (etatCourant == ETAT_ERREUR)
+			{
+				etatCourant = ETAT_ATTENTE;
+			}
+			return gererDeplacement(cible);
+		}
+
+		/* Si pas encore ancré et pas sur une base */
+		etatCourant = ETAT_ERREUR;
+		notifierMessage("Ancrez-vous d'abord sur une BASE_DEPART !");
+		return false;
 	}
 
 	/*----------------------------*/
@@ -249,6 +259,7 @@ public class Jeu
 			return false;
 		}
 
+		/* Vérifier que les deux sommets sont reliés par une arête */
 		if (!sontReliesParArete(positionActuelle, cible))
 		{
 			etatCourant = ETAT_ERREUR;
@@ -256,6 +267,7 @@ public class Jeu
 			return false;
 		}
 
+		/* Vérifier la correspondance de la carte */
 		if (!carteActiveEstJoker && !cible.getType().equals(carteActive))
 		{
 			etatCourant = ETAT_ERREUR;
@@ -263,6 +275,7 @@ public class Jeu
 			return false;
 		}
 
+		/* Vérifier le croisement */
 		if (detecterCroisement(positionActuelle, cible))
 		{
 			etatCourant = ETAT_ERREUR;
@@ -270,17 +283,26 @@ public class Jeu
 			return false;
 		}
 
+		/* Vérifier l'aller-retour immédiat (seule interdiction de retour) */
 		Arete nouvelleArete = new Arete(positionActuelle, cible);
-		if (lignesTracees.contains(nouvelleArete))
+		Arete areteInverse  = new Arete(cible, positionActuelle);
+
+		if (!lignesTracees.isEmpty())
 		{
-			etatCourant = ETAT_ERREUR;
-			notifierMessage("Ce tracé existe déjà !");
-			return false;
+			Arete derniereArete = lignesTracees.get(lignesTracees.size() - 1);
+			if (derniereArete.equals(areteInverse))
+			{
+				etatCourant = ETAT_ERREUR;
+				notifierMessage("Aller-retour immédiat interdit !");
+				return false;
+			}
 		}
 
+		/* Ajouter le tracé (même si le sommet est déjà visité) */
 		lignesTracees.add(nouvelleArete);
 		for (Ecouteur e : ecouteurs) { e.LigneTracee(nouvelleArete); }
 
+		/* Marquer le sommet (même si déjà visité) */
 		cible.setVisite(true);
 		if (!sommetsVisites.contains(cible))
 		{
@@ -293,6 +315,7 @@ public class Jeu
 			zonesVisitees.add(zone);
 		}
 
+		/* Consommer la carte et mettre à jour la position */
 		carteActive = null;
 		carteActiveEstJoker = false;
 		positionActuelle = cible;
